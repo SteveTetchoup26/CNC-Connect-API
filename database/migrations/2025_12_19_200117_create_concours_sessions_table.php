@@ -16,7 +16,7 @@ return new class extends Migration
             $table->integer('concours_id');
             $table->integer('session_id');
             $table->foreign('concours_id')->references('id')->on('concours')->onDelete('cascade');
-            $table->foreign('session_id')->references('id')->on('filieres')->onDelete('cascade');
+            $table->foreign('session_id')->references('id')->on('sessions')->onDelete('cascade');
             $table->unique(["session_id", "concours_id"]);
             $table->timestamps();
         });
