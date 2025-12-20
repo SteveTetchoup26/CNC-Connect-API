@@ -17,6 +17,7 @@ return new class extends Migration
             $table->integer('role_id');
             $table->foreign('permission_id')->references('id')->on('permissions')->onDelete('cascade');
             $table->foreign('role_id')->references('id')->on('roles')->onDelete('cascade');
+            $table->unique(['role_id', 'permission_id']);
             $table->timestamps();
         });
     }
