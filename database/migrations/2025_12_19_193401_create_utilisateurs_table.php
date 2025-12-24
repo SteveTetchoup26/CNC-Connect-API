@@ -19,6 +19,8 @@ return new class extends Migration
             $table->string('prenom')->nullable();
             $table->string('telephone')->nullable();
             $table->timestamps();
+
+            $table->index('email');
         });
     }
 

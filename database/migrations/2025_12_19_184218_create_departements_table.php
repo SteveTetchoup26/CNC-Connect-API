@@ -19,6 +19,8 @@ return new class extends Migration
             $table->integer('ecole_id');
             $table->foreign('ecole_id')->references('id')->on('ecoles')->onDelete('cascade');
             $table->timestamps();
+
+            $table->index("code_departement");
         });
     }
 
