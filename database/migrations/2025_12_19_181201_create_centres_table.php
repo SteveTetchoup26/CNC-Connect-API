@@ -20,6 +20,9 @@ return new class extends Migration
             $table->integer('region_id');
             $table->foreign('region_id')->references('id')->on('regions')->onDelete('cascade');
             $table->timestamps();
+
+            $table->index('type_centre');
+
         });
     }
 

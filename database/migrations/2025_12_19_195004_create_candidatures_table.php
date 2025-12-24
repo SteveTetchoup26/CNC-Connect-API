@@ -42,6 +42,9 @@ return new class extends Migration
                   ->onDelete('cascade');
 
             $table->timestamps();
+
+            $table->index('code_candidat_temp');
+            $table->index('code_candidat_def');
         });
     }
 
