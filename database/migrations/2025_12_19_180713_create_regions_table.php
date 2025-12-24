@@ -16,6 +16,9 @@ return new class extends Migration
             $table->string('code_region')->unique();
             $table->string('label_region');
             $table->timestamps();
+
+            $table->index('code_region');
+
         });
     }
 

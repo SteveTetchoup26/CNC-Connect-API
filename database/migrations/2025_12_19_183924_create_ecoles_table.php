@@ -24,6 +24,9 @@ return new class extends Migration
             $table->string('telephone_ecole')->nullable();
             $table->string('embleme_ecole')->nullable();
             $table->timestamps();
+
+            $table->index('code_ecole');
+
         });
     }
 

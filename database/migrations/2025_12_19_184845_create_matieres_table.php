@@ -16,6 +16,8 @@ return new class extends Migration
             $table->string('libelle_matiere');
             $table->string('code_matiere')->unique();
             $table->timestamps();
+
+            $table->index("code_matiere");
         });
     }
 
