@@ -3,10 +3,12 @@
 use App\Http\Controllers\Admin\CandidatureController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\EcoleController;
+use App\Http\Controllers\Api\EpreuveController;
 use App\Http\Controllers\Api\SessionController;
 use App\Http\Controllers\CandidatController;
 use App\Http\Controllers\ConcoursController;
 use App\Http\Controllers\SpecificationConcoursController;
+use App\Models\Epreuve;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -45,6 +47,8 @@ Route::prefix('v1')->group(function () {
 
             Route::apiResource('sessions', SessionController::class);
             Route::apiResource('ecoles', EcoleController::class);
+
+            Route::apiResource('epreuves', EpreuveController::class);
 
             Route::get('candidatures', [CandidatureController::class, 'index']);
             Route::get('candidatures/{id}', [CandidatureController::class, 'show']);
