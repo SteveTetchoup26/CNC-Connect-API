@@ -16,6 +16,9 @@ return new class extends Migration
             $table->string('libelle_filiere');
             $table->string('code_filiere')->unique();
             $table->string('description_filiere');
+            $table->integer('departement_id');
+            $table->foreign('departement_id')->references('id')->on('departements')->onDelete('cascade');
+
             $table->timestamps();
         });
     }
