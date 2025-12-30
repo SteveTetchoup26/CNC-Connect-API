@@ -2,12 +2,12 @@
 
 use App\Http\Controllers\Admin\CandidatureController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\CandidatController;
+use App\Http\Controllers\Api\ConcoursController;
 use App\Http\Controllers\Api\EcoleController;
 use App\Http\Controllers\Api\EpreuveController;
 use App\Http\Controllers\Api\SessionController;
-use App\Http\Controllers\CandidatController;
-use App\Http\Controllers\ConcoursController;
-use App\Http\Controllers\SpecificationConcoursController;
+use App\Http\Controllers\Api\SpecificationConcoursController;
 use App\Models\Epreuve;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -61,3 +61,7 @@ Route::prefix('v1')->group(function () {
 
     });
 });
+
+
+Route::get('/candidature/{id}/fiche/download', [CandidatController::class, 'downloadFicheCandidature'])
+    ->name('candidature.download.fiche');

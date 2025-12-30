@@ -10,8 +10,8 @@ class Role extends Model
     use HasFactory;
 
     protected $fillable = [
-        'libelle_role',
-        'description_role',
+        'libelle',
+        'description',
     ];
 
     protected $casts = [

@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Controller;
 use App\Models\SpecificationConcours;
 use App\Models\Concours;
 use Illuminate\Http\Request;
@@ -47,7 +48,10 @@ class SpecificationConcoursController extends Controller
         }
 
         $specification = SpecificationConcours::create($request->all());
-        return response()->json($specification, 201);
+        return response()->json([
+            'message' => 'Spécification créée avec succès',
+            'specification' => $specification->load('concours')
+        ], 201);
     }
 
     /**

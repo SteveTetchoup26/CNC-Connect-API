@@ -13,6 +13,7 @@ class Filiere extends Model
         'libelle_filiere',
         'code_filiere',
         'description_filiere',
+        'departement_id'
     ];
 
     protected $casts = [
@@ -30,5 +31,10 @@ class Filiere extends Model
         return $this->belongsToMany(Concours::class, 'concours_filieres')
                     ->withPivot('nbre_places')
                     ->withTimestamps();
+    }
+
+    public function departement()
+    {
+        return $this->belongsTo(Departement::class);
     }
 }

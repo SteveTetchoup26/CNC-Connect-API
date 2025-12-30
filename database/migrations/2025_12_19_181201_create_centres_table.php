@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('ville_centre');
             $table->integer('capacite');
             $table->integer('region_id');
+            
             $table->foreign('region_id')->references('id')->on('regions')->onDelete('cascade');
             $table->timestamps();
 

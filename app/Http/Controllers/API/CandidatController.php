@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Controller;
 use App\Models\Candidat;
 use App\Models\Candidature;
 use App\Models\FichePaiement;
@@ -9,11 +10,16 @@ use App\Models\EtatCandidature;
 use App\Models\HistoriqueCandidature;
 use App\Models\Notification;
 use App\Models\Concours;
+use App\Mail\CandidatureSuccessMail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Log;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class CandidatController extends Controller
 {
@@ -67,7 +73,7 @@ class CandidatController extends Controller
 
             // Paiement
             'num_recu' => 'required|string|unique:candidats,num_recu|max:100',
-            'fiche_paiement' => 'required|file|mimes:pdf,jpg,jpeg,png|max:2048',
+            'fiche_paiement' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
 
             // Centres
             'centre_depot_id' => 'required|integer|exists:centres,id',
@@ -124,7 +130,7 @@ class CandidatController extends Controller
             // 3. Générer le code temporaire
             $codeTemporaire = $this->genererCodeTemporaire($request->concours_id, $candidat->id);
 
-            // 4. Créer la candidature
+            // 4. Créer la candidature (sans QR code pour l'instant)
             $candidature = Candidature::create([
                 'candidat_id' => $candidat->id,
                 'concours_id' => $request->concours_id,
@@ -156,6 +162,18 @@ class CandidatController extends Controller
                 'candidature_id' => $candidature->id
             ]);
 
+            $downloadUrl = route('candidature.download.fiche', ['id' => $candidature->id]);
+
+            // 8. Envoyer l'email avec la fiche PDF
+            try {
+                Mail::to($utilisateur->email)->send(
+                    new CandidatureSuccessMail($candidat, $candidature, $concours, $downloadUrl)
+                );
+            } catch (\Exception $emailError) {
+                // Log l'erreur mais continue le processus
+                Log::error('Erreur envoi email: ' . $emailError->getMessage());
+            }
+
             DB::commit();
 
             return response()->json([
@@ -163,7 +181,8 @@ class CandidatController extends Controller
                 'candidat' => $candidat,
                 'candidature' => $candidature->load(['concours', 'centreDepot', 'centreExamen']),
                 'code_temporaire' => $codeTemporaire,
-                'statut' => 'EN_ATTENTE'
+                'statut' => 'EN_ATTENTE',
+                'download_url' => $downloadUrl
             ], 201);
 
         } catch (\Exception $e) {
@@ -236,7 +255,6 @@ class CandidatController extends Controller
             'age' => 'sometimes|integer|min:16|max:100',
             'telephone_mere' => 'sometimes|string|max:20',
             'telephone_pere' => 'sometimes|string|max:20',
-            // Ajoutez d'autres validations selon les besoins
         ]);
 
         if ($validator->fails()) {
@@ -295,6 +313,7 @@ class CandidatController extends Controller
             ->with([
                 'candidatures.concours',
                 'candidatures.historiques.etat',
+                'candidatures.notifications',
                 'candidatures.centreDepot',
                 'candidatures.centreExamen',
                 'fichePaiements'
@@ -372,5 +391,54 @@ class CandidatController extends Controller
         $candidat->delete();
 
         return response()->json(['message' => 'Candidat supprimé avec succès']);
+    }
+
+    /**
+     * Télécharger la fiche de candidature en PDF
+     */
+    public function downloadFicheCandidature($id)
+    {
+        $candidature = Candidature::with([
+            'candidat.utilisateur',
+            'concours',
+            'centreDepot',
+            'centreExamen'
+        ])->find($id);
+
+        if (!$candidature) {
+            return response()->json(['message' => 'Candidature non trouvée'], 404);
+        }
+
+        // Récupérer l'école via la relation Concours -> Filiere -> Departement -> Ecole
+        $ecole = null;
+        $premiereFiliere = $candidature->concours->filieres()->first();
+        if ($premiereFiliere && $premiereFiliere->departement) {
+            $ecole = $premiereFiliere->departement->ecole;
+        }
+
+        // Générer le QR Code
+        $downloadUrl = route('candidature.download.fiche', ['id' => $candidature->id]);
+        $qrCode = QrCode::format('svg')->size(300)->generate($downloadUrl);
+        $qrCodeBase64 = 'data:image/png;base64,' . base64_encode($qrCode);
+
+        // Préparer les données pour la vue
+        $data = [
+            'candidature' => $candidature,
+            'candidat' => $candidature->candidat,
+            'utilisateur' => $candidature->candidat->utilisateur,
+            'concours' => $candidature->concours,
+            'centreDepot' => $candidature->centreDepot,
+            'centreExamen' => $candidature->centreExamen,
+            'ecole' => $ecole,
+            'qrCodeImage' => $qrCodeBase64,
+        ];
+
+        // Générer le PDF
+        $pdf = Pdf::loadView('pdf.fiche_candidature', $data);
+        $pdf->setPaper('a4', 'portrait');
+
+        // Télécharger le PDF
+        $filename = 'fiche_candidature_' . $candidature->code_candidat_temp . '.pdf';
+        return $pdf->download($filename);
     }
 }
