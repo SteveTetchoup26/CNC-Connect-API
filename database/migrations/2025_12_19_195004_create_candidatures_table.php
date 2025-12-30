@@ -16,6 +16,8 @@ return new class extends Migration
 
             $table->integer('candidat_id');
             $table->integer('concours_id');
+            $table->integer('centre_depot_id')->nullable();
+            $table->integer('centre_examen_id')->nullable();
 
             $table->string('code_candidat_temp')->nullable(); // Code temporaire
             $table->string('code_candidat_def')->nullable()->unique(); // Code définitif
@@ -41,10 +43,22 @@ return new class extends Migration
                   ->on('concours')
                   ->onDelete('cascade');
 
+            $table->foreign('centre_depot_id')
+                  ->references('id')
+                  ->on('centres')
+                  ->onDelete('set null');
+
+            $table->foreign('centre_examen_id')
+                  ->references('id')
+                  ->on('centres')
+                  ->onDelete('set null');
+
             $table->timestamps();
 
             $table->index('code_candidat_temp');
             $table->index('code_candidat_def');
+            $table->index('centre_depot_id');
+            $table->index('centre_examen_id');
         });
     }
 

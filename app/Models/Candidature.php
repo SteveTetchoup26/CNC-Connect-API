@@ -50,4 +50,14 @@ class Candidature extends Model
     {
         return $this->hasMany(Notification::class);
     }
+
+    public function centreDepot()
+    {
+        return $this->belongsTo(Centre::class, 'centre_depot_id');
+    }
+
+    public function centreExamen()
+    {
+        return $this->belongsTo(Centre::class, 'centre_examen_id');
+    }
 }
