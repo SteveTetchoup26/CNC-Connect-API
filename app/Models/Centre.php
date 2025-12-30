@@ -28,4 +28,14 @@ class Centre extends Model
     {
         return $this->belongsTo(Region::class);
     }
+
+    public function candidaturesDepot()
+    {
+        return $this->hasMany(Candidature::class, 'centre_depot_id');
+    }
+
+    public function candidaturesExamen()
+    {
+        return $this->hasMany(Candidature::class, 'centre_examen_id');
+    }
 }

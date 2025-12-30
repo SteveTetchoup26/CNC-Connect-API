@@ -31,6 +31,11 @@ class Concours extends Model
                     ->withTimestamps();
     }
 
+    public function concoursFilieres()
+    {
+        return $this->hasMany(ConcoursFiliere::class);
+    }
+
     public function specification()
     {
         return $this->hasOne(SpecificationConcours::class);

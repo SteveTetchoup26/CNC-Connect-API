@@ -25,4 +25,9 @@ class Departement extends Model
     {
         return $this->belongsTo(Ecole::class);
     }
+
+    public function filieres()
+    {
+        return $this->hasMany(Filiere::class);
+    }
 }

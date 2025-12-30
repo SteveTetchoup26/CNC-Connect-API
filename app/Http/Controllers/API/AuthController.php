@@ -105,7 +105,7 @@ class AuthController extends Controller
             ]);
 
             // Récupérer le rôle "candidat"
-            $roleCandidat = Role::where('libelle_role', 'candidat')->first();
+            $roleCandidat = Role::where('libelle', 'CANDIDAT')->first();
 
             if (!$roleCandidat) {
                 DB::rollBack();

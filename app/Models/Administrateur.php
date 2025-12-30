@@ -10,6 +10,7 @@ class Administrateur extends Model
     use HasFactory;
 
     protected $fillable = [
+        'matricule',
         'departement',
         'utilisateur_id',
     ];
@@ -19,7 +20,6 @@ class Administrateur extends Model
         'updated_at' => 'datetime',
     ];
 
-    // Relation : Un administrateur appartient à un utilisateur
     public function utilisateur()
     {
         return $this->belongsTo(Utilisateur::class);

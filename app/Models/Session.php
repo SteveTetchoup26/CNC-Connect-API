@@ -28,4 +28,11 @@ class Session extends Model
     {
         return $this->hasMany(HistoriqueSession::class);
     }
+
+    public function etats()
+    {
+        return $this->belongsToMany(EtatSession::class, 'historique_sessions')
+                    ->withPivot('date_etat')
+                    ->withTimestamps();
+    }
 }

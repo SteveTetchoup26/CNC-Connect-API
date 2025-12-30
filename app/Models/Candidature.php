@@ -12,6 +12,8 @@ class Candidature extends Model
     protected $fillable = [
         'candidat_id',
         'concours_id',
+        'centre_depot_id',
+        'centre_examen_id',
         'code_candidat_temp',
         'code_candidat_def',
         'date_candidature',
@@ -49,5 +51,15 @@ class Candidature extends Model
     public function notifications()
     {
         return $this->hasMany(Notification::class);
+    }
+
+    public function centreDepot()
+    {
+        return $this->belongsTo(Centre::class, 'centre_depot_id');
+    }
+
+    public function centreExamen()
+    {
+        return $this->belongsTo(Centre::class, 'centre_examen_id');
     }
 }

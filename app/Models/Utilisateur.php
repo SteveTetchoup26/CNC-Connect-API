@@ -33,6 +33,11 @@ class Utilisateur extends Authenticatable
         return $this->hasOne(Candidat::class);
     }
 
+    public function administrateurs()
+    {
+        return $this->hasMany(Administrateur::class);
+    }
+
     public function roles()
     {
         return $this->belongsToMany(Role::class, 'utilisateur_roles');

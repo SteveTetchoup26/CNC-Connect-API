@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('libelle_niveau');
             $table->string('code_niveau')->unique();
-            $table->string('description_niveau');
+            $table->string('description_niveau')->nullable();
             $table->timestamps();
         });
     }
