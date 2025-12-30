@@ -50,7 +50,7 @@ class Utilisateur extends Authenticatable
 
     public function hasRole($role)
     {
-        return $this->roles()->where('libelle_role', $role)->exists();
+        return $this->roles()->where('libelle', $role)->exists();
     }
 
     public function hasPermission($permission)

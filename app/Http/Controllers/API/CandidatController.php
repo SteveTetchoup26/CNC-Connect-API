@@ -400,7 +400,7 @@ class CandidatController extends Controller
     {
         $candidature = Candidature::with([
             'candidat.utilisateur',
-            'concours',
+            'concours.specification',
             'centreDepot',
             'centreExamen'
         ])->find($id);
@@ -421,6 +421,9 @@ class CandidatController extends Controller
         $qrCode = QrCode::format('svg')->size(300)->generate($downloadUrl);
         $qrCodeBase64 = 'data:image/png;base64,' . base64_encode($qrCode);
 
+        // Récupérer la spécification du concours pour les documents requis
+        $specification = $candidature->concours->specification;
+
         // Préparer les données pour la vue
         $data = [
             'candidature' => $candidature,
@@ -431,6 +434,7 @@ class CandidatController extends Controller
             'centreExamen' => $candidature->centreExamen,
             'ecole' => $ecole,
             'qrCodeImage' => $qrCodeBase64,
+            'specification' => $specification,
         ];
 
         // Générer le PDF

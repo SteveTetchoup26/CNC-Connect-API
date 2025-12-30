@@ -6,9 +6,14 @@ use App\Http\Controllers\Controller;
 use App\Models\Candidature;
 use App\Models\EtatCandidature;
 use App\Models\HistoriqueCandidature;
+use App\Models\Notification;
 use App\Models\Centre;
+use App\Mail\CandidatureValideeMail;
+use App\Mail\CandidatureRejeteeMail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
@@ -31,7 +36,7 @@ class CandidatureController extends Controller
     }
 
     /**
-     * Détails d’une candidature
+     * Détails d'une candidature
      */
     public function show(int $id)
     {
@@ -55,7 +60,8 @@ class CandidatureController extends Controller
         DB::beginTransaction();
 
         try {
-            $candidature = Candidature::findOrFail($id);
+            $candidature = Candidature::with(['candidat.utilisateur', 'concours'])
+                ->findOrFail($id);
 
             // Générer code définitif
             $codeDef = $this->genererCodeDefinitif($candidature);
@@ -66,7 +72,10 @@ class CandidatureController extends Controller
             ]);
 
             // Etat APPROUVEE
-            $etat = EtatCandidature::where('libelle_etat', 'APPROUVEE')->firstOrFail();
+            $etat = EtatCandidature::firstOrCreate(
+                ['libelle_etat' => 'APPROUVEE'],
+                ['description_etat' => 'Candidature approuvée']
+            );
 
             HistoriqueCandidature::create([
                 'candidature_id' => $candidature->id,
@@ -74,11 +83,35 @@ class CandidatureController extends Controller
                 'date_etat' => now()
             ]);
 
+            // Créer une notification
+            Notification::create([
+                'intitule' => 'Candidature validée',
+                'contenu' => "Félicitations ! Votre candidature au concours '{$candidature->concours->libelle_concours}' a été validée. Votre code candidat définitif est : {$codeDef}. Vous pouvez télécharger votre fiche de candidature définitive.",
+                'candidature_id' => $candidature->id
+            ]);
+
+            // Envoyer l'email de validation
+            $downloadUrl = route('candidature.download.fiche', ['id' => $candidature->id]);
+
+            try {
+                Mail::to($candidature->candidat->utilisateur->email)->send(
+                    new CandidatureValideeMail(
+                        $candidature->candidat,
+                        $candidature,
+                        $candidature->concours,
+                        $downloadUrl
+                    )
+                );
+            } catch (\Exception $emailError) {
+                Log::error('Erreur envoi email validation: ' . $emailError->getMessage());
+            }
+
             DB::commit();
 
             return response()->json([
-                'message' => 'Candidature validée',
-                'code_definitif' => $codeDef
+                'message' => 'Candidature validée avec succès',
+                'code_definitif' => $codeDef,
+                'candidature' => $candidature->load(['historiques.etat', 'notifications'])
             ]);
 
         } catch (\Exception $e) {
@@ -96,19 +129,23 @@ class CandidatureController extends Controller
     public function rejeter(Request $request, int $id)
     {
         $request->validate([
-            'motif_rejet' => 'required|string|min:5'
+            'motif_rejet' => 'required|string|min:10|max:1000'
         ]);
 
         DB::beginTransaction();
 
         try {
-            $candidature = Candidature::findOrFail($id);
+            $candidature = Candidature::with(['candidat.utilisateur', 'concours'])
+                ->findOrFail($id);
 
             $candidature->update([
                 'motif_rejet' => $request->motif_rejet
             ]);
 
-            $etat = EtatCandidature::where('libelle_etat', 'REJETEE')->firstOrFail();
+            $etat = EtatCandidature::firstOrCreate(
+                ['libelle_etat' => 'REJETEE'],
+                ['description_etat' => 'Candidature rejetée']
+            );
 
             HistoriqueCandidature::create([
                 'candidature_id' => $candidature->id,
@@ -116,9 +153,33 @@ class CandidatureController extends Controller
                 'date_etat' => now()
             ]);
 
+            // Créer une notification
+            Notification::create([
+                'intitule' => 'Candidature non retenue',
+                'contenu' => "Votre candidature au concours '{$candidature->concours->libelle_concours}' n'a malheureusement pas été retenue. Motif : {$request->motif_rejet}",
+                'candidature_id' => $candidature->id
+            ]);
+
+            // Envoyer l'email de rejet
+            try {
+                Mail::to($candidature->candidat->utilisateur->email)->send(
+                    new CandidatureRejeteeMail(
+                        $candidature->candidat,
+                        $candidature,
+                        $candidature->concours,
+                        $request->motif_rejet
+                    )
+                );
+            } catch (\Exception $emailError) {
+                Log::error('Erreur envoi email rejet: ' . $emailError->getMessage());
+            }
+
             DB::commit();
 
-            return response()->json(['message' => 'Candidature rejetée']);
+            return response()->json([
+                'message' => 'Candidature rejetée',
+                'candidature' => $candidature->load(['historiques.etat', 'notifications'])
+            ]);
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -151,13 +212,16 @@ class CandidatureController extends Controller
         if ($request->centre_examen_id) {
             $centreExamen = Centre::find($request->centre_examen_id);
             if ($centreExamen->type_centre !== 'CENTRE_EXAMEN') {
-                return response()->json(['message' => 'Centre d’examen invalide'], 422);
+                return response()->json(['message' => 'Centre d\'examen invalide'], 422);
             }
         }
 
         $candidature->update($request->only(['centre_depot_id', 'centre_examen_id']));
 
-        return response()->json(['message' => 'Centres mis à jour']);
+        return response()->json([
+            'message' => 'Centres mis à jour avec succès',
+            'candidature' => $candidature->load(['centreDepot', 'centreExamen'])
+        ]);
     }
 
     /**
