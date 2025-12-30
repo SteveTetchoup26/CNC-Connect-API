@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Concours;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 class ConcoursController extends Controller
@@ -13,9 +14,18 @@ class ConcoursController extends Controller
      */
     public function index()
     {
-        $concours = Concours::with('specification')->latest()->get();
+        $concours = Concours::with([
+            // Charger uniquement la dernière session
+            'sessions' => function($query) {
+                $query->latest()->limit(1);
+            },
+            // Charger les filières et l'école associée
+            'concoursFilieres.filiere.departement.ecole'
+        ])->latest()->get();
+
         return response()->json($concours);
     }
+
 
     /**
      * Créer un nouveau concours
@@ -27,14 +37,51 @@ class ConcoursController extends Controller
             'date_limite' => 'required|date',
             'date_examen' => 'required|date|after:date_limite',
             'frais_inscription' => 'required|numeric|min:0',
+
+            // Filieres
+            'filieres' => 'required|array|min:1',
+            'filieres.*.id' => 'required|exists:filieres,id',
+            'filieres.*.nbre_places' => 'required|integer|min:1',
+
+            // Session unique
+            'session_id' => 'required|exists:sessions,id',
         ]);
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        $concours = Concours::create($request->all());
-        return response()->json($concours, 201);
+        DB::beginTransaction();
+
+        try {
+            // 1️⃣ Créer le concours
+            $concours = Concours::create($request->only([
+                'libelle_concours', 'date_limite', 'date_examen', 'frais_inscription'
+            ]));
+
+            // 2️⃣ Associer les filières avec nombre de places
+            foreach ($request->filieres as $filiere) {
+                $concours->filieres()->attach($filiere['id'], ['nbre_places' => $filiere['nbre_places']]);
+            }
+
+            // 3️⃣ Associer la session unique
+            $concours->sessions()->attach($request->session_id);
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Concours créé avec succès',
+                'concours' => $concours->load('filieres', 'sessions')
+            ], 201);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'message' => 'Erreur lors de la création du concours',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+
     }
 
     /**
