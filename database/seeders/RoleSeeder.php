@@ -12,23 +12,23 @@ class RoleSeeder extends Seeder
     {
         // Créer les rôles
         $superAdmin = Role::create([
-            'libelle_role' => 'super_admin',
-            'description_role' => 'Super Administrateur avec tous les droits'
+            'libelle' => 'SUPER_ADMINISTRATEUR',
+            'description' => 'Super Administrateur avec tous les droits'
         ]);
 
         $admin = Role::create([
-            'libelle_role' => 'admin',
-            'description_role' => 'Administrateur du système'
+            'libelle' => 'ADMINISTRATEUR',
+            'description' => 'Administrateur du système'
         ]);
 
         $gestionnaire = Role::create([
-            'libelle_role' => 'gestionnaire',
-            'description_role' => 'Gestionnaire des concours et candidatures'
+            'libelle' => 'GESTIONNAIRE',
+            'description' => 'Gestionnaire des concours et candidatures'
         ]);
 
         $candidat = Role::create([
-            'libelle_role' => 'candidat',
-            'description_role' => 'Candidat aux concours'
+            'libelle' => 'CANDIDAT',
+            'description' => 'Candidat aux concours'
         ]);
 
         // Assigner toutes les permissions au Super Admin

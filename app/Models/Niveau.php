@@ -22,7 +22,8 @@ class Niveau extends Model
 
     public function matieres()
     {
-        return $this->belongsToMany(Matiere::class, 'niveau_matieres');
+        return $this->belongsToMany(Matiere::class, 'niveau_matieres')
+                    ->withTimestamps();
     }
 
     public function filieres()
