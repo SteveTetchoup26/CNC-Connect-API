@@ -13,7 +13,7 @@
                     <!-- Header -->
                     <tr>
                         <td style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 40px 30px; text-align: center;">
-                            <h1 style="color: #ffffff; margin: 0; font-size: 32px;">✅ Félicitations !</h1>
+                            <h1 style="color: #ffffff; margin: 0; font-size: 32px;">Félicitations !</h1>
                             <p style="color: #ffffff; margin: 10px 0 0 0; font-size: 18px; font-weight: bold;">Votre candidature a été validée</p>
                         </td>
                     </tr>
@@ -27,15 +27,15 @@
 
                             <p style="color: #555555; font-size: 15px; line-height: 1.6; margin: 0 0 25px 0;">
                                 Nous avons le plaisir de vous informer que votre candidature au concours
-                                <strong style="color: #10b981;">{{ $concours->libelle_concours }}</strong> a été
-                                <strong style="color: #10b981;">VALIDÉE</strong> avec succès ! 🎉
+                                {{ $concours->libelle_concours }} a été
+                                VALIDÉE avec succès !
                             </p>
 
                             <!-- Success Badge -->
                             <table width="100%" cellpadding="0" cellspacing="0" style="background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); border-radius: 8px; margin: 25px 0;">
                                 <tr>
                                     <td style="padding: 20px; text-align: center;">
-                                        <p style="color: #065f46; margin: 0 0 8px 0; font-size: 14px; font-weight: bold;">✨ STATUT : VALIDÉE</p>
+                                        <p style="color: #065f46; margin: 0 0 8px 0; font-size: 14px; font-weight: bold;">STATUT : VALIDÉE</p>
                                         <p style="color: #047857; margin: 0; font-size: 13px;">Votre dossier a été approuvé par l'administration</p>
                                     </td>
                                 </tr>
@@ -64,12 +64,12 @@
                                         <p style="color: #555555; font-size: 14px; line-height: 1.6; margin: 0 0 10px 0;">
                                             <strong>Date de l'examen :</strong> {{ $concours->date_examen->format('d/m/Y à H:i') }}
                                         </p>
-                                        <p style="color: #555555; font-size: 14px; line-height: 1.6; margin: 0 0 10px 0;">
+                                        {{-- <p style="color: #555555; font-size: 14px; line-height: 1.6; margin: 0 0 10px 0;">
                                             <strong>Date de validation :</strong> {{ $candidature->date_validation->format('d/m/Y à H:i') }}
                                         </p>
                                         <p style="color: #555555; font-size: 14px; line-height: 1.6; margin: 0;">
                                             <strong>Statut :</strong> <span style="color: #10b981; font-weight: bold;">✅ APPROUVÉE</span>
-                                        </p>
+                                        </p> --}}
                                     </td>
                                 </tr>
                             </table>
@@ -79,7 +79,7 @@
                                 <tr>
                                     <td align="center">
                                         <a href="{{ $downloadUrl }}" style="display: inline-block; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff; text-decoration: none; padding: 15px 40px; border-radius: 6px; font-size: 16px; font-weight: bold; box-shadow: 0 4px 6px rgba(16, 185, 129, 0.3);">
-                                            📥 Télécharger ma fiche définitive
+                                            Télécharger ma fiche
                                         </a>
                                     </td>
                                 </tr>
@@ -90,7 +90,7 @@
                                 <tr>
                                     <td style="padding: 20px;">
                                         <p style="color: #92400e; font-size: 14px; line-height: 1.6; margin: 0;">
-                                            <strong>📌 Important le jour de l'examen :</strong><br>
+                                            <strong>Important le jour de l'examen :</strong><br>
                                             • Présentez-vous au centre d'examen <strong>30 minutes avant</strong> l'heure de début<br>
                                             • Apportez votre <strong>fiche de candidature imprimée</strong><br>
                                             • Munissez-vous de votre <strong>carte d'identité originale</strong><br>
@@ -102,7 +102,7 @@
                             </table>
 
                             <p style="color: #555555; font-size: 14px; line-height: 1.6; margin: 25px 0 0 0;">
-                                Nous vous souhaitons bonne chance pour l'examen ! 🍀
+                                Nous vous souhaitons bonne chance pour l'examen !
                             </p>
 
                             <p style="color: #555555; font-size: 14px; line-height: 1.6; margin: 15px 0 0 0;">

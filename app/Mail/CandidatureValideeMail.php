@@ -31,7 +31,7 @@ class CandidatureValideeMail extends Mailable
      */
     public function build()
     {
-        return $this->subject('✅ Candidature Validée - ' . $this->concours->libelle_concours)
+        return $this->subject('Candidature Validée - ' . $this->concours->libelle_concours)
                     ->view('emails.candidature_validee');
     }
 }

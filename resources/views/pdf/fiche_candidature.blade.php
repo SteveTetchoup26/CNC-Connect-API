@@ -66,6 +66,7 @@
         .header-left p, .header-right p {
             margin: 1px 0;
             line-height: 1.2;
+            text-align: center;
         }
 
         .country-motto {
@@ -92,14 +93,29 @@
         }
 
         /* Titre principal avec QR Code */
-        .main-title {
+        /* .main-title {
             text-align: center;
             background: white;
             border: 2px solid #000;
             padding: 10px;
             margin: 12px 0;
-            position: relative;
+            display: flex !important;
+            align-items: center;
+            justify-content: space-between;
         }
+
+        .main-title .photo-candidat {
+            width: 70px;
+            height: 70px;
+            border: 1px solid #000;
+            margin-right: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+
 
         .main-title h1 {
             font-size: 11pt;
@@ -117,9 +133,6 @@
         }
 
         .qr-code-in-title {
-            position: absolute;
-            top: 5px;
-            right: 5px;
             width: 70px;
             height: 70px;
             border: 1px solid #000;
@@ -129,7 +142,7 @@
         .qr-code {
             width: 100%;
             height: 100%;
-        }
+        } */
 
         /* Section code inscription */
         .inscription-section {
@@ -280,7 +293,7 @@
                 <!-- Partie centrale (Logo) -->
                 <div class="header-center">
                     @if($ecole && $ecole->logo_url)
-                        <img src="{{ public_path('storage/' . $ecole->logo_url) }}" alt="Logo" class="logo">
+                        <img src="{{ storage_path('app/public/' . $ecole->logo_url) }}" alt="Logo" class="logo">
                     @endif
                     @if($ecole && $ecole->embleme_ecole)
                         <p style="font-size: 7pt; margin-top: 4px; font-style: italic;">{{ $ecole->embleme_ecole }}</p>
@@ -303,13 +316,41 @@
 
             <!-- Titre principal avec QR Code -->
             <div class="main-title">
-                @if($qrCodeImage)
-                <div class="qr-code-in-title">
-                    <img src="{{ $qrCodeImage }}" alt="QR Code" class="qr-code">
-                </div>
-                @endif
-                <h1>Fiche d'inscription au concours d'entrée {{ strtoupper($ecole->libelle_ecole ?? '') }}</h1>
-                <h2>Session {{ $concours->date_examen->format('Y') }}</h2>
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr style="border: 1px solid black">
+                        <td style="width: 70px; vertical-align: middle; text-align: center;">
+                            @if($candidat->photo_url)
+                            <div style="width: 80px; height: 80px; border: 1px solid #000; overflow: hidden; padding: 2px;">
+                                <img src="{{ storage_path('app/public/' . $candidat->photo_url) }}"
+                                    alt="Photo candidat"
+                                    style="width: 100%; height: 100%; object-fit: cover;">
+                            </div>
+                            @else
+                            <div style="width: 70px; height: 70px; border: 1px dashed #ccc;
+                                        display: flex; align-items: center; justify-content: center; color: #666;">
+                                Aucune photo
+                            </div>
+                            @endif
+                        </td>
+
+                        <td style="vertical-align: middle; text-align: center; padding: 0 15px;">
+                            <h1 style="font-size: 11pt; font-weight: bold; margin: 0 0 4px 0; text-transform: uppercase;">
+                                Fiche d'inscription au concours d'entrée {{ strtoupper($ecole->libelle_ecole ?? '') }}
+                            </h1>
+                            <h2 style="font-size: 12pt; font-weight: bold; color: #0066cc; margin: 0; text-transform: uppercase;">
+                                Session {{ $concours->date_examen->format('Y') }}
+                            </h2>
+                        </td>
+
+                        @if($qrCodeImage)
+                        <td style="width: 70px; vertical-align: middle; text-align: center;">
+                            <div style="width: 80px; height: 80px; border: 1px solid #000; padding: 2px;">
+                                <img src="{{ $qrCodeImage }}" alt="QR Code" style="width: 100%; height: 100%;">
+                            </div>
+                        </td>
+                        @endif
+                    </tr>
+                </table>
             </div>
 
             <!-- Code d'inscription -->

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Api;
+namespace App\Http\Controllers\api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Candidat;
@@ -10,6 +10,7 @@ use App\Models\EtatCandidature;
 use App\Models\HistoriqueCandidature;
 use App\Models\Notification;
 use App\Models\Concours;
+use App\Models\Centre;
 use App\Mail\CandidatureSuccessMail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -51,6 +52,7 @@ class CandidatController extends Controller
             'departement_origine' => 'required|string|max:255',
             'statut_matrimonial' => 'required|string|max:50',
             'handicap' => 'nullable|string|max:255',
+            'photo' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
 
             // Pièce d'identité
             'numero_cni' => 'required|string|unique:candidats,numero_cni|max:50',
@@ -73,7 +75,7 @@ class CandidatController extends Controller
 
             // Paiement
             'num_recu' => 'required|string|unique:candidats,num_recu|max:100',
-            'fiche_paiement' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
+            'fiche_paiement' => 'required|file|mimes:pdf,jpg,jpeg,png|max:2048',
 
             // Centres
             'centre_depot_id' => 'required|integer|exists:centres,id',
@@ -107,6 +109,14 @@ class CandidatController extends Controller
             // 1. Créer ou mettre à jour le candidat
             $candidatData = $request->except(['fiche_paiement', 'concours_id', 'centre_depot_id', 'centre_examen_id']);
             $candidatData['utilisateur_id'] = $utilisateur->id; // Ajouter l'ID de l'utilisateur authentifié
+
+            if ($request->hasFile('photo')) {
+                $photoFile = $request->file('photo');
+                $photoFilename = 'photo_' . $utilisateur->id . '_' . time() . '.' . $photoFile->getClientOriginalExtension();
+                $photoPath = $photoFile->storeAs('photos_candidats', $photoFilename, 'public');
+
+                $candidatData['photo_url'] = $photoPath; // Stocker le chemin
+            }
 
             if ($candidatExistant) {
                 $candidat = $candidatExistant;
@@ -162,9 +172,9 @@ class CandidatController extends Controller
                 'candidature_id' => $candidature->id
             ]);
 
+            // 8. Envoyer l'email avec la fiche PDF
             $downloadUrl = route('candidature.download.fiche', ['id' => $candidature->id]);
 
-            // 8. Envoyer l'email avec la fiche PDF
             try {
                 Mail::to($utilisateur->email)->send(
                     new CandidatureSuccessMail($candidat, $candidature, $concours, $downloadUrl)
@@ -234,7 +244,7 @@ class CandidatController extends Controller
      * Mettre à jour les informations du candidat authentifié
      */
     public function update(Request $request)
-    {
+{
         // Récupérer l'utilisateur authentifié
         $utilisateur = $request->user();
 
@@ -249,24 +259,85 @@ class CandidatController extends Controller
         }
 
         $validator = Validator::make($request->all(), [
+            // Informations personnelles
             'adresse' => 'sometimes|string|max:255',
             'nationalite' => 'sometimes|string|max:100',
             'sexe' => 'sometimes|in:M,F',
             'age' => 'sometimes|integer|min:16|max:100',
+            'date_naissance' => 'sometimes|date|before:today',
+            'lieu_naissance' => 'sometimes|string|max:255',
+            'region_origine' => 'sometimes|string|max:255',
+            'ville_origine' => 'sometimes|string|max:255',
+            'departement_origine' => 'sometimes|string|max:255',
+            'statut_matrimonial' => 'sometimes|string|max:50',
+            'handicap' => 'nullable|string|max:255',
+            'photo' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+
+            // Pièce d'identité
+            'numero_cni' => 'sometimes|string|max:50|unique:candidats,numero_cni,' . $candidat->id,
+            'date_delivrance_cni' => 'sometimes|date|before_or_equal:today',
+
+            // Informations familiales
+            'nom_mere' => 'sometimes|string|max:255',
             'telephone_mere' => 'sometimes|string|max:20',
-            'telephone_pere' => 'sometimes|string|max:20',
+            'nom_pere' => 'nullable|string|max:255',
+            'telephone_pere' => 'nullable|string|max:20',
+            'nom_tuteur' => 'nullable|string|max:255',
+            'telephone_tuteur' => 'nullable|string|max:20',
+
+            // Informations scolaires
+            'niveau_scolaire' => 'sometimes|string|max:100',
+            'filiere_origine' => 'sometimes|string|max:100',
+            'diplome_admission' => 'sometimes|string|max:100',
+            'mention' => 'nullable|string|max:50',
+            'annee_diplome' => 'sometimes|integer|min:1950|max:' . now()->year,
+
+            // Paiement
+            'num_recu' => 'sometimes|string|max:100|unique:candidats,num_recu,' . $candidat->id,
         ]);
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        $candidat->update($request->all());
+        DB::beginTransaction();
 
-        return response()->json([
-            'message' => 'Informations mises à jour avec succès',
-            'candidat' => $candidat
-        ]);
+        try {
+            $updateData = $request->except(['photo']);
+
+            // Gérer l'upload de la photo
+            if ($request->hasFile('photo')) {
+                // Supprimer l'ancienne photo si elle existe
+                if ($candidat->photo_url && Storage::disk('public')->exists($candidat->photo_url)) {
+                    Storage::disk('public')->delete($candidat->photo_url);
+                }
+
+                // Uploader la nouvelle photo
+                $photoFile = $request->file('photo');
+                $photoFilename = 'photo_' . $utilisateur->id . '_' . time() . '.' . $photoFile->getClientOriginalExtension();
+                $photoPath = $photoFile->storeAs('photos_candidats', $photoFilename, 'public');
+
+                $updateData['photo_url'] = $photoPath;
+            }
+
+            // Mettre à jour le candidat
+            $candidat->update($updateData);
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Informations mises à jour avec succès',
+                'candidat' => $candidat->load(['utilisateur', 'candidatures.concours']),
+                'photo_url' => $candidat->photo_url ? Storage::url($candidat->photo_url) : null
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'message' => 'Erreur lors de la mise à jour',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
@@ -380,17 +451,40 @@ class CandidatController extends Controller
             return response()->json(['message' => 'Candidat non trouvé'], 404);
         }
 
-        // Supprimer les fichiers de paiement
-        $fichePaiements = FichePaiement::where('candidat_id', $candidat->id)->get();
-        foreach ($fichePaiements as $fiche) {
-            if (Storage::disk('public')->exists($fiche->fichier_url)) {
-                Storage::disk('public')->delete($fiche->fichier_url);
+        DB::beginTransaction();
+
+        try {
+            // Supprimer la photo du candidat
+            if ($candidat->photo_url && Storage::disk('public')->exists($candidat->photo_url)) {
+                Storage::disk('public')->delete($candidat->photo_url);
             }
+
+            // Supprimer les fichiers de paiement
+            $fichePaiements = FichePaiement::where('candidat_id', $candidat->id)->get();
+            foreach ($fichePaiements as $fiche) {
+                if (Storage::disk('public')->exists($fiche->fichier_url)) {
+                    Storage::disk('public')->delete($fiche->fichier_url);
+                }
+                $fiche->delete();
+            }
+
+            // Supprimer les candidatures associées
+            Candidature::where('candidat_id', $candidat->id)->delete();
+
+            // Supprimer le candidat
+            $candidat->delete();
+
+            DB::commit();
+
+            return response()->json(['message' => 'Candidat supprimé avec succès']);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'message' => 'Erreur lors de la suppression',
+                'error' => $e->getMessage()
+            ], 500);
         }
-
-        $candidat->delete();
-
-        return response()->json(['message' => 'Candidat supprimé avec succès']);
     }
 
     /**
@@ -419,7 +513,7 @@ class CandidatController extends Controller
         // Générer le QR Code
         $downloadUrl = route('candidature.download.fiche', ['id' => $candidature->id]);
         $qrCode = QrCode::format('svg')->size(300)->generate($downloadUrl);
-        $qrCodeBase64 = 'data:image/png;base64,' . base64_encode($qrCode);
+        $qrCodeBase64 = 'data:image/svg+xml;base64,' . base64_encode($qrCode);
 
         // Récupérer la spécification du concours pour les documents requis
         $specification = $candidature->concours->specification;

@@ -21,6 +21,7 @@ return new class extends Migration
             $table->enum('sexe', ['M', 'F'])->nullable();
             $table->integer('age')->nullable()->nullable();
             $table->date('date_naissance')->nullable();
+            $table->string("photo_url")->nullable();
             $table->string('lieu_naissance')->nullable();
             $table->string('region_origine')->nullable();
             $table->string('ville_origine')->nullable();

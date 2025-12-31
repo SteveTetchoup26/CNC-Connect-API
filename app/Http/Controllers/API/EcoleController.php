@@ -9,6 +9,7 @@ use App\Models\Filiere;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class EcoleController extends Controller
 {
@@ -22,6 +23,12 @@ class EcoleController extends Controller
             'ecole.code_ecole' => 'required|string|unique:ecoles,code_ecole',
             'ecole.localisation' => 'required|string',
             'ecole.email_ecole' => 'required|email|unique:ecoles,email_ecole',
+            'ecole.logo' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048', // Validation du logo
+            'ecole.bp_ecole' => 'nullable|string',
+            'ecole.siteweb_ecole' => 'nullable|url',
+            'ecole.devise' => 'nullable|string',
+            'ecole.telephone_ecole' => 'nullable|string',
+            'ecole.embleme_ecole' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
 
             'departements' => 'required|array|min:1',
             'departements.*.libelle_departement' => 'required|string',
@@ -40,9 +47,33 @@ class EcoleController extends Controller
         ]);
 
         $ecole = DB::transaction(function () use ($request) {
+            // Traitement du logo
+            $logoPath = null;
+            if ($request->hasFile('ecole.logo')) {
+                $logoFile = $request->file('ecole.logo');
+                $logoFilename = 'logo_' . time() . '_' . $logoFile->getClientOriginalName();
+                $logoPath = $logoFile->storeAs('logos_ecoles', $logoFilename, 'public');
+            }
+
+            // Traitement de l'emblème (optionnel)
+            $emblemePath = null;
+            if ($request->hasFile('ecole.embleme_ecole')) {
+                $emblemeFile = $request->file('ecole.embleme_ecole');
+                $emblemeFilename = 'embleme_' . time() . '_' . $emblemeFile->getClientOriginalName();
+                $emblemePath = $emblemeFile->storeAs('emblemes_ecoles', $emblemeFilename, 'public');
+            }
 
             /** 1️⃣ ÉCOLE */
-            $ecole = Ecole::create($request->ecole);
+            $ecoleData = $request->ecole;
+            $ecoleData['logo_url'] = $logoPath;
+            if ($emblemePath) {
+                $ecoleData['embleme_ecole'] = $emblemePath;
+            }
+
+            // Retirer les fichiers du tableau de données
+            unset($ecoleData['logo'], $ecoleData['embleme_ecole']);
+
+            $ecole = Ecole::create($ecoleData);
 
             /** 2️⃣ DÉPARTEMENTS */
             foreach ($request->departements as $depData) {
@@ -88,7 +119,125 @@ class EcoleController extends Controller
 
         return response()->json([
             'message' => 'École configurée avec succès',
-            'data' => $ecole->load('departements.filieres.niveaux')
+            'data' => $ecole->load('departements.filieres.niveaux'),
+            'logo_url' => $ecole->logo_url ? Storage::url($ecole->logo_url) : null,
+            'embleme_url' => $ecole->embleme_ecole ? Storage::url($ecole->embleme_ecole) : null,
         ], 201);
+    }
+
+    /**
+     * Mettre à jour l'école
+     */
+    public function update(Request $request, $id): JsonResponse
+    {
+        $ecole = Ecole::findOrFail($id);
+
+        $request->validate([
+            'libelle_ecole' => 'sometimes|string',
+            'code_ecole' => 'sometimes|string|unique:ecoles,code_ecole,' . $id,
+            'localisation' => 'sometimes|string',
+            'email_ecole' => 'sometimes|email|unique:ecoles,email_ecole,' . $id,
+            'logo' => 'sometimes|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'bp_ecole' => 'nullable|string',
+            'siteweb_ecole' => 'nullable|url',
+            'devise' => 'nullable|string',
+            'telephone_ecole' => 'nullable|string',
+            'embleme_ecole' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+        ]);
+
+        DB::transaction(function () use ($request, $ecole) {
+            // Mettre à jour le logo si fourni
+            if ($request->hasFile('logo')) {
+                // Supprimer l'ancien logo
+                if ($ecole->logo_url && Storage::disk('public')->exists($ecole->logo_url)) {
+                    Storage::disk('public')->delete($ecole->logo_url);
+                }
+
+                $logoFile = $request->file('logo');
+                $logoFilename = 'logo_' . time() . '_' . $logoFile->getClientOriginalName();
+                $logoPath = $logoFile->storeAs('logos_ecoles', $logoFilename, 'public');
+                $ecole->logo_url = $logoPath;
+            }
+
+            // Mettre à jour l'emblème si fourni
+            if ($request->hasFile('embleme_ecole')) {
+                // Supprimer l'ancien emblème
+                if ($ecole->embleme_ecole && Storage::disk('public')->exists($ecole->embleme_ecole)) {
+                    Storage::disk('public')->delete($ecole->embleme_ecole);
+                }
+
+                $emblemeFile = $request->file('embleme_ecole');
+                $emblemeFilename = 'embleme_' . time() . '_' . $emblemeFile->getClientOriginalName();
+                $emblemePath = $emblemeFile->storeAs('emblemes_ecoles', $emblemeFilename, 'public');
+                $ecole->embleme_ecole = $emblemePath;
+            }
+
+            // Mettre à jour les autres champs
+            $ecole->fill($request->except(['logo', 'embleme_ecole']));
+            $ecole->save();
+        });
+
+        return response()->json([
+            'message' => 'École mise à jour avec succès',
+            'data' => $ecole,
+            'logo_url' => $ecole->logo_url ? Storage::url($ecole->logo_url) : null,
+            'embleme_url' => $ecole->embleme_ecole ? Storage::url($ecole->embleme_ecole) : null,
+        ]);
+    }
+
+    /**
+     * Mettre à jour uniquement le logo
+     */
+    public function updateLogo(Request $request, $id): JsonResponse
+    {
+        $request->validate([
+            'logo' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+        ]);
+
+        $ecole = Ecole::findOrFail($id);
+
+        // Supprimer l'ancien logo
+        if ($ecole->logo_url && Storage::disk('public')->exists($ecole->logo_url)) {
+            Storage::disk('public')->delete($ecole->logo_url);
+        }
+
+        // Uploader le nouveau logo
+        $logoFile = $request->file('logo');
+        $logoFilename = 'logo_' . time() . '_' . $logoFile->getClientOriginalName();
+        $logoPath = $logoFile->storeAs('logos_ecoles', $logoFilename, 'public');
+
+        $ecole->logo_url = $logoPath;
+        $ecole->save();
+
+        return response()->json([
+            'message' => 'Logo mis à jour avec succès',
+            'logo_url' => Storage::url($logoPath),
+            'data' => $ecole
+        ]);
+    }
+
+    /**
+     * Supprimer le logo
+     */
+    public function deleteLogo($id): JsonResponse
+    {
+        $ecole = Ecole::findOrFail($id);
+
+        if (!$ecole->logo_url) {
+            return response()->json(['message' => 'Aucun logo à supprimer'], 400);
+        }
+
+        // Supprimer le fichier
+        if (Storage::disk('public')->exists($ecole->logo_url)) {
+            Storage::disk('public')->delete($ecole->logo_url);
+        }
+
+        $ecole->logo_url = null;
+        $ecole->save();
+
+        return response()->json([
+            'message' => 'Logo supprimé avec succès',
+            'data' => $ecole
+        ]);
     }
 }

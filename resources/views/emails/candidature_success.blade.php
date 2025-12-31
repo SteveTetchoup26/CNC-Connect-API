@@ -12,8 +12,8 @@
                 <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
                     <!-- Header -->
                     <tr>
-                        <td style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 30px; text-align: center;">
-                            <h1 style="color: #ffffff; margin: 0; font-size: 28px;">🎉 Félicitations !</h1>
+                        <td style="padding: 40px 30px; text-align: center; border-bottom: 1px solid #ccc;">
+                            <h1 style="color: #ffffff; margin: 0; font-size: 28px;">Félicitations !</h1>
                             <p style="color: #ffffff; margin: 10px 0 0 0; font-size: 16px;">Votre inscription a été enregistrée avec succès</p>
                         </td>
                     </tr>
@@ -27,7 +27,7 @@
 
                             <p style="color: #555555; font-size: 15px; line-height: 1.6; margin: 0 0 25px 0;">
                                 Nous avons le plaisir de vous confirmer que votre inscription au concours
-                                <strong style="color: #667eea;">{{ $concours->libelle_concours }}</strong> a été enregistrée avec succès.
+                                <strong style="color: black;">{{ $concours->libelle_concours }}</strong> a été enregistrée avec succès.
                             </p>
 
                             <!-- Code Box -->
@@ -54,7 +54,7 @@
                                             <strong>Date limite de dépôt :</strong> {{ $concours->date_limite->format('d/m/Y') }}
                                         </p>
                                         <p style="color: #555555; font-size: 14px; line-height: 1.6; margin: 0;">
-                                            <strong>Statut actuel :</strong> <span style="color: #ffc107;">⏳ En attente de validation</span>
+                                            <strong>Statut actuel :</strong> <span style="color: #ffc107;">En attente de validation</span>
                                         </p>
                                     </td>
                                 </tr>
@@ -64,8 +64,8 @@
                             <table width="100%" cellpadding="0" cellspacing="0" style="margin: 30px 0;">
                                 <tr>
                                     <td align="center">
-                                        <a href="{{ $downloadUrl }}" style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #ffffff; text-decoration: none; padding: 15px 40px; border-radius: 6px; font-size: 16px; font-weight: bold; box-shadow: 0 4px 6px rgba(102, 126, 234, 0.3);">
-                                            📥 Télécharger ma fiche de candidature
+                                        <a href="{{ $downloadUrl }}" style="display: inline-block; background: rgb(43, 90, 198); color: #ffffff; text-decoration: none; padding: 15px 40px; border-radius: 6px; font-size: 16px; font-weight: bold; box-shadow: 0 4px 6px rgba(102, 126, 234, 0.3);">
+                                            Télécharger ma fiche
                                         </a>
                                     </td>
                                 </tr>
@@ -76,7 +76,7 @@
                                 <tr>
                                     <td style="padding: 20px;">
                                         <p style="color: #856404; font-size: 14px; line-height: 1.6; margin: 0;">
-                                            <strong>⚠️ Prochaines étapes :</strong><br>
+                                            <strong>Prochaines étapes :</strong><br>
                                             1. Téléchargez et imprimez votre fiche de candidature<br>
                                             2. Préparez tous les documents requis<br>
                                             3. Déposez votre dossier complet au centre de dépôt avant le <strong>{{ $concours->date_limite->format('d/m/Y') }}</strong><br>

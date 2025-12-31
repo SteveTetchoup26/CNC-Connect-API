@@ -38,7 +38,7 @@
                             <table width="100%" cellpadding="0" cellspacing="0" style="background: #fee2e2; border-radius: 8px; margin: 25px 0;">
                                 <tr>
                                     <td style="padding: 20px; text-align: center;">
-                                        <p style="color: #991b1b; margin: 0 0 8px 0; font-size: 14px; font-weight: bold;">❌ STATUT : NON RETENUE</p>
+                                        <p style="color: #991b1b; margin: 0 0 8px 0; font-size: 14px; font-weight: bold;">STATUT : NON RETENUE</p>
                                         <p style="color: #b91c1c; margin: 0; font-size: 13px;">Votre dossier a été examiné par l'administration</p>
                                     </td>
                                 </tr>
@@ -82,7 +82,7 @@
                                 <tr>
                                     <td style="padding: 20px;">
                                         <p style="color: #1e3a8a; font-size: 14px; line-height: 1.6; margin: 0;">
-                                            <strong>💡 Que faire maintenant ?</strong><br><br>
+                                            <strong>Que faire maintenant ?</strong><br><br>
                                             • Vous pouvez corriger les éléments mentionnés dans le motif de rejet<br>
                                             • Préparer un nouveau dossier conforme aux exigences<br>
                                             • Vous inscrire à la prochaine session du concours<br>
