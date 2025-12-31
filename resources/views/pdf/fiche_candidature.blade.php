@@ -12,291 +12,491 @@
         }
 
         body {
-            font-family: 'Arial', sans-serif;
-            padding: 20px;
+            font-family: 'Arial', 'Helvetica', sans-serif;
+            padding: 10px;
             background: white;
+            font-size: 9.5pt;
+            line-height: 1.3;
         }
 
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            border: 2px solid #333;
-            padding: 30px;
+        .main-border {
+            border: 4px solid #000;
+            padding: 0;
         }
 
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 3px solid #333;
-            padding-bottom: 20px;
-            margin-bottom: 30px;
+        .inner-border {
+            border: 2px solid #000;
+            margin: 6px;
+            padding: 15px;
+        }
+
+        /* En-tête tripartite */
+        .header-section {
+            display: table;
+            width: 100%;
+            border-bottom: 3px solid #000;
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+        }
+
+        .header-left, .header-center, .header-right {
+            display: table-cell;
+            vertical-align: top;
+            padding: 0 8px;
+        }
+
+        .header-left {
+            width: 35%;
+            text-align: left;
+            font-size: 8pt;
+        }
+
+        .header-center {
+            width: 30%;
+            text-align: center;
+            vertical-align: middle;
+        }
+
+        .header-right {
+            width: 35%;
+            text-align: right;
+            font-size: 8pt;
+        }
+
+        .header-left p, .header-right p {
+            margin: 1px 0;
+            line-height: 1.2;
+            text-align: center;
+        }
+
+        .country-motto {
+            font-weight: bold;
+            font-size: 8.5pt;
+            margin-bottom: 2px;
+        }
+
+        .school-name {
+            font-weight: bold;
+            font-size: 9pt;
+            margin: 4px 0;
+        }
+
+        .school-details {
+            font-size: 7.5pt;
+            color: #333;
         }
 
         .logo {
-            max-width: 120px;
+            max-width: 100px;
+            max-height: 100px;
             height: auto;
         }
 
-        .school-info {
+        /* Titre principal avec QR Code */
+        /* .main-title {
             text-align: center;
-            flex: 1;
-            margin: 0 20px;
+            background: white;
+            border: 2px solid #000;
+            padding: 10px;
+            margin: 12px 0;
+            display: flex !important;
+            align-items: center;
+            justify-content: space-between;
         }
 
-        .school-info h1 {
-            font-size: 20px;
-            color: #333;
-            margin-bottom: 5px;
+        .main-title .photo-candidat {
+            width: 70px;
+            height: 70px;
+            border: 1px solid #000;
+            margin-right: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
         }
 
-        .school-info p {
-            font-size: 12px;
-            color: #666;
-            margin: 2px 0;
-        }
 
-        .qr-code {
-            width: 100px;
-            height: 100px;
-        }
 
-        .title {
-            text-align: center;
-            background: #333;
-            color: white;
-            padding: 15px;
-            margin: 20px 0;
-            font-size: 18px;
+        .main-title h1 {
+            font-size: 11pt;
             font-weight: bold;
+            margin: 0 40px 4px 0;
             text-transform: uppercase;
         }
 
-        .code-section {
-            text-align: center;
-            background: #f0f0f0;
-            padding: 15px;
-            margin: 20px 0;
-            border-radius: 5px;
-        }
-
-        .code-section .code {
-            font-size: 24px;
+        .main-title h2 {
+            font-size: 12pt;
             font-weight: bold;
-            color: #d9534f;
-            letter-spacing: 2px;
+            color: #0066cc;
+            margin: 0;
+            text-transform: uppercase;
         }
 
-        .info-grid {
+        .qr-code-in-title {
+            width: 70px;
+            height: 70px;
+            border: 1px solid #000;
+            padding: 2px;
+        }
+
+        .qr-code {
+            width: 100%;
+            height: 100%;
+        } */
+
+        /* Section code inscription */
+        .inscription-section {
             display: table;
             width: 100%;
-            margin: 20px 0;
+            margin: 10px 0;
         }
 
-        .info-row {
-            display: table-row;
+        .inscription-left {
+            display: table-cell;
+            width: 70%;
+            vertical-align: middle;
+        }
+
+        .inscription-right {
+            display: table-cell;
+            width: 30%;
+            text-align: right;
+            vertical-align: middle;
+            font-size: 8pt;
+            font-style: italic;
+        }
+
+        .code-inscription {
+            font-size: 11pt;
+            font-weight: bold;
+        }
+
+        .code-number {
+            color: #dc3545;
+            font-size: 12pt;
+        }
+
+        /* Sections avec en-tête noir */
+        .section-header {
+            background: #000;
+            color: white;
+            padding: 6px 10px;
+            margin: 10px 0 0 0;
+            font-weight: bold;
+            font-size: 9pt;
+            text-transform: uppercase;
+        }
+
+        .section-content {
+            border: 1px solid #000;
+            border-top: none;
+            padding: 8px;
+            margin-bottom: 10px;
+            font-size: 9pt;
+        }
+
+        /* Disposition horizontale des infos */
+        .info-line {
+            margin: 3px 0;
+            line-height: 1.4;
         }
 
         .info-label {
-            display: table-cell;
-            padding: 10px;
             font-weight: bold;
-            border: 1px solid #ddd;
-            background: #f9f9f9;
-            width: 35%;
+            display: inline;
         }
 
         .info-value {
-            display: table-cell;
-            padding: 10px;
-            border: 1px solid #ddd;
+            display: inline;
         }
 
-        .section-title {
-            background: #666;
-            color: white;
-            padding: 10px;
-            margin: 20px 0 10px 0;
+        .info-separator {
+            margin: 0 15px;
+        }
+
+        /* Documents section (red header) */
+        .section-header-red {
+            background: white;
+            color: #dc3545;
+            padding: 6px 10px;
+            margin: 10px 0 0 0;
             font-weight: bold;
-            font-size: 14px;
+            font-size: 9pt;
+            text-transform: uppercase;
+            border: 1px solid #dc3545;
+            border-bottom: 3px solid #dc3545;
         }
 
-        .footer {
-            margin-top: 40px;
-            padding-top: 20px;
-            border-top: 2px solid #333;
-            text-align: center;
-            font-size: 12px;
-            color: #666;
+        .documents-list {
+            border: 1px solid #dc3545;
+            border-top: none;
+            padding: 8px;
+            margin-bottom: 10px;
+            font-size: 8pt;
+            line-height: 1.5;
         }
 
-        .important-note {
-            background: #fff3cd;
-            border: 1px solid #ffc107;
-            padding: 15px;
-            margin: 20px 0;
-            border-radius: 5px;
+        .documents-list p {
+            margin: 5px 0;
         }
 
-        .important-note strong {
-            color: #856404;
+        /* Footer */
+        .footer-section {
+            display: table;
+            width: 100%;
+            margin-top: 15px;
+            padding-top: 10px;
+            border-top: 2px solid #000;
+        }
+
+        .footer-left {
+            display: table-cell;
+            width: 50%;
+            text-align: left;
+            font-weight: bold;
+            font-size: 10pt;
+        }
+
+        .footer-right {
+            display: table-cell;
+            width: 50%;
+            text-align: right;
+            font-style: italic;
+            font-size: 9pt;
+        }
+
+        .code-candidat {
+            color: #dc3545;
+            font-size: 11pt;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <!-- Header -->
-        <div class="header">
-            @if($ecole && $ecole->logo_url)
-                <img src="{{ public_path('storage/' . $ecole->logo_url) }}" alt="Logo" class="logo">
-            @else
-                <div style="width: 120px;"></div>
-            @endif
+    <div class="main-border">
+        <div class="inner-border">
 
-            <div class="school-info">
-                <h1>{{ $ecole->libelle_ecole ?? 'ÉCOLE' }}</h1>
-                @if($ecole)
-                    <p>{{ $ecole->localisation }}</p>
-                    <p>BP: {{ $ecole->bp_ecole }} | Tél: {{ $ecole->telephone_ecole }}</p>
-                    <p>Email: {{ $ecole->email_ecole }} | Site: {{ $ecole->siteweb_ecole }}</p>
-                    @if($ecole->devise)
-                        <p><em>"{{ $ecole->devise }}"</em></p>
+            <!-- En-tête tripartite -->
+            <div class="header-section">
+                <!-- Partie gauche (Français) -->
+                <div class="header-left">
+                    <p class="country-motto">RÉPUBLIQUE DU CAMEROUN</p>
+                    <p style="font-style: italic; font-size: 7.5pt;">Paix - Travail - Patrie</p>
+                    <p class="school-name">{{ strtoupper($ecole->libelle_ecole ?? 'ÉCOLE') }}</p>
+                    @if($ecole)
+                    <p class="school-details">BP: {{ $ecole->bp_ecole }}</p>
+                    <p class="school-details">Tél: {{ $ecole->telephone_ecole }}</p>
+                    <p class="school-details">E-Mail: {{ $ecole->email_ecole }}</p>
+                    <p class="school-details">Site Web: {{ $ecole->siteweb_ecole }}</p>
                     @endif
+                </div>
+
+                <!-- Partie centrale (Logo) -->
+                <div class="header-center">
+                    @if($ecole && $ecole->logo_url)
+                        <img src="{{ storage_path('app/public/' . $ecole->logo_url) }}" alt="Logo" class="logo">
+                    @endif
+                    @if($ecole && $ecole->embleme_ecole)
+                        <p style="font-size: 7pt; margin-top: 4px; font-style: italic;">{{ $ecole->embleme_ecole }}</p>
+                    @endif
+                </div>
+
+                <!-- Partie droite (Anglais) -->
+                <div class="header-right">
+                    <p class="country-motto">REPUBLIC OF CAMEROON</p>
+                    <p style="font-style: italic; font-size: 7.5pt;">Peace - Work - Fatherland</p>
+                    <p class="school-name">{{ strtoupper($ecole->libelle_ecole ?? 'SCHOOL') }}</p>
+                    @if($ecole)
+                    <p class="school-details">PO-Box: {{ $ecole->bp_ecole }}</p>
+                    <p class="school-details">Phone: {{ $ecole->telephone_ecole }}</p>
+                    <p class="school-details">E-Mail: {{ $ecole->email_ecole }}</p>
+                    <p class="school-details">Site Web: {{ $ecole->siteweb_ecole }}</p>
+                    @endif
+                </div>
+            </div>
+
+            <!-- Titre principal avec QR Code -->
+            <div class="main-title">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr style="border: 1px solid black">
+                        <td style="width: 70px; vertical-align: middle; text-align: center;">
+                            @if($candidat->photo_url)
+                            <div style="width: 80px; height: 80px; border: 1px solid #000; overflow: hidden; padding: 2px;">
+                                <img src="{{ storage_path('app/public/' . $candidat->photo_url) }}"
+                                    alt="Photo candidat"
+                                    style="width: 100%; height: 100%; object-fit: cover;">
+                            </div>
+                            @else
+                            <div style="width: 70px; height: 70px; border: 1px dashed #ccc;
+                                        display: flex; align-items: center; justify-content: center; color: #666;">
+                                Aucune photo
+                            </div>
+                            @endif
+                        </td>
+
+                        <td style="vertical-align: middle; text-align: center; padding: 0 15px;">
+                            <h1 style="font-size: 11pt; font-weight: bold; margin: 0 0 4px 0; text-transform: uppercase;">
+                                Fiche d'inscription au concours d'entrée {{ strtoupper($ecole->libelle_ecole ?? '') }}
+                            </h1>
+                            <h2 style="font-size: 12pt; font-weight: bold; color: #0066cc; margin: 0; text-transform: uppercase;">
+                                Session {{ $concours->date_examen->format('Y') }}
+                            </h2>
+                        </td>
+
+                        @if($qrCodeImage)
+                        <td style="width: 70px; vertical-align: middle; text-align: center;">
+                            <div style="width: 80px; height: 80px; border: 1px solid #000; padding: 2px;">
+                                <img src="{{ $qrCodeImage }}" alt="QR Code" style="width: 100%; height: 100%;">
+                            </div>
+                        </td>
+                        @endif
+                    </tr>
+                </table>
+            </div>
+
+            <!-- Code d'inscription -->
+            <div class="inscription-section">
+                <div class="inscription-left">
+                    @if($candidature->code_candidat_def)
+                        <span class="code-inscription">CODE CANDIDAT N° <span class="code-number">{{ $candidature->code_candidat_def }}</span></span>
+                    @else
+                        <span class="code-inscription">INSCRIPTION N° <span class="code-number">{{ $candidature->code_candidat_temp }}</span></span>
+                    @endif
+                </div>
+                <div class="inscription-right">
+                    <em>Timbre Fiscal ici /<br>Stamp here</em>
+                </div>
+            </div>
+
+            <!-- Informations Personnelles -->
+            <div class="section-header">Informations Personnelles / Personal Informations</div>
+            <div class="section-content">
+                <div class="info-line">
+                    <span class="info-label">Nom:</span> <span class="info-value">{{ strtoupper($utilisateur->nom) }}</span>
+                    <span class="info-separator"></span>
+                    <span class="info-label">Prénom:</span> <span class="info-value">{{ strtoupper($utilisateur->prenom) }}</span>
+                </div>
+
+                <div class="info-line">
+                    <span class="info-label">Date naissance:</span> <span class="info-value">{{ \Carbon\Carbon::parse($candidat->date_naissance)->format('Y-m-d') }}</span>
+                    <span class="info-separator"></span>
+                    <span class="info-label">Lieu de naissance:</span> <span class="info-value">{{ strtoupper($candidat->lieu_naissance) }}</span>
+                    <span class="info-separator"></span>
+                    <span class="info-label">Sexe:</span> <span class="info-value">{{ $candidat->sexe == 'M' ? 'Masculin' : 'Féminin' }}</span>
+                </div>
+
+                <div class="info-line">
+                    <span class="info-label">Nationalité:</span> <span class="info-value">{{ $candidat->nationalite }}</span>
+                    <span class="info-separator"></span>
+                    <span class="info-label">Région d'origine:</span> <span class="info-value">{{ $candidat->region_origine }}</span>
+                    <span class="info-separator"></span>
+                    <span class="info-label">Département d'origine:</span> <span class="info-value">{{ $candidat->departement_origine }}</span>
+                </div>
+
+                <div class="info-line">
+                    <span class="info-label">CNI:</span> <span class="info-value">{{ $candidat->numero_cni }}</span>
+                    <span class="info-separator"></span>
+                    <span class="info-label">Téléphone:</span> <span class="info-value">{{ $utilisateur->telephone ?? 'N/A' }}</span>
+                    <span class="info-separator"></span>
+                    <span class="info-label">Adresse:</span> <span class="info-value">{{ $candidat->adresse }}</span>
+                </div>
+
+                <div class="info-line">
+                    <span class="info-label">1ère Langue:</span> <span class="info-value">Français</span>
+                    <span class="info-separator"></span>
+                    <span class="info-label">Email:</span> <span class="info-value">{{ $utilisateur->email }}</span>
+                </div>
+            </div>
+
+            <!-- Informations Académiques -->
+            <div class="section-header">Informations Académique / Academic Informations</div>
+            <div class="section-content">
+                <div class="info-line">
+                    <span class="info-label">Diplôme d'admission:</span> <span class="info-value">{{ $candidat->diplome_admission }}</span>
+                </div>
+
+                <div class="info-line">
+                    <span class="info-label">Filière:</span> <span class="info-value">{{ strtoupper($candidat->filiere_origine) }}</span>
+                    <span class="info-separator"></span>
+                    <span class="info-label">Niveau:</span> <span class="info-value">{{ $candidat->niveau_scolaire }}</span>
+                    <span class="info-separator"></span>
+                    <span class="info-label">Mention:</span> <span class="info-value">{{ strtoupper($candidat->mention ?? 'N/A') }}</span>
+                </div>
+
+                <div class="info-line">
+                    <span class="info-label">Année diplôme:</span> <span class="info-value">{{ $candidat->annee_diplome }}</span>
+                    <span class="info-separator"></span>
+                    <span class="info-label">Centre d'examen:</span> <span class="info-value">{{ strtoupper($centreExamen->ville_centre) }}</span>
+                    <span class="info-separator"></span>
+                    <span class="info-label">Centre de dépôt:</span> <span class="info-value">{{ strtoupper($centreDepot->ville_centre) }}</span>
+                </div>
+            </div>
+
+            <!-- Autres Informations -->
+            <div class="section-header">Autres Informations / Others Informations</div>
+            <div class="section-content">
+                <div class="info-line">
+                    <span class="info-label">Nom du père:</span> <span class="info-value">{{ strtoupper($candidat->nom_pere ?? 'N/A') }}</span>
+                    <span class="info-separator"></span>
+                    <span class="info-label">Téléphone du père:</span> <span class="info-value">{{ $candidat->telephone_pere ?? 'N/A' }}</span>
+                </div>
+
+                <div class="info-line">
+                    <span class="info-label">Nom de la mère:</span> <span class="info-value">{{ strtoupper($candidat->nom_mere) }}</span>
+                    <span class="info-separator"></span>
+                    <span class="info-label">Téléphone de la mère:</span> <span class="info-value">{{ $candidat->telephone_mere }}</span>
+                </div>
+            </div>
+
+            <!-- Documents Nécessaires (Dynamique) -->
+            @if($specification)
+            <div class="section-header-red">Documents Nécessaires / Necessary Documents</div>
+            <div class="documents-list">
+                @if($specification->acte_naissance)
+                <p>• Une photocopie certifiée d'acte de naissance datant de moins de trois (03) mois. <em>/ A certified true photocopy of the birth certificate issued within the last three (03) months.</em></p>
+                @endif
+
+                @if($specification->diplomes)
+                <p>• Une photocopie certifiée conforme du diplôme/attestation requis. <em>/ A certified true copy of the required diploma.</em></p>
+                @endif
+
+                @if($specification->releve_notes)
+                <p>• Un relevé de notes officiel. <em>/ An official transcript of records.</em></p>
+                @endif
+
+                @if($specification->certificat_nationalite)
+                <p>• Un certificat de nationalité. <em>/ A certificate of nationality.</em></p>
+                @endif
+
+                @if($specification->carte_nationale_identite)
+                <p>• Une photocopie de la carte nationale d'identité. <em>/ A photocopy of the national identity card.</em></p>
+                @endif
+
+                @if($specification->photo)
+                <p>• Quatre (04) photos d'identité 4x4 du candidat. <em>/ Four (04) 4x4 identity photos of the candidate.</em></p>
+                @endif
+
+                <p>• Un certificat médical signé par un médecin fonctionnaire, datant de moins de trois (03) mois et certifiant que le candidat est apte à poursuivre des études supérieures. <em>/ A medical certificate issued within the last three (03) months by a state medical practitioner, and testifying that the candidate is fit for higher education.</em></p>
+
+                <p>• Un reçu de versement bancaire d'un montant de {{ number_format($concours->frais_inscription, 0, ',', ' ') }} FCFA. <em>/ A bank deposit receipt of {{ number_format($concours->frais_inscription, 0, ',', ' ') }} CFA francs.</em></p>
+
+                <p>• Une enveloppe A4 timbrée au tarif intérieur réglementaire et portant l'adresse exacte du candidat. <em>/ A 21 x 29.7 size self-addressed envelope bearing a 400 CFA francs postal stamp.</em></p>
+
+                @if($specification->desc_infos_concours)
+                <p style="margin-top: 8px; font-style: italic;">{{ $specification->desc_infos_concours }}</p>
                 @endif
             </div>
-
-            @if($qrCodeImage)
-                <img src="{{ $qrCodeImage }}" alt="QR Code" class="qr-code">
             @endif
-        </div>
 
-        <!-- Title -->
-        <div class="title">
-            Fiche de Candidature
-        </div>
+            <!-- Footer avec code candidat -->
+            <div class="footer-section">
+                <div class="footer-left">
+                    Code Candidat: <span class="code-candidat">{{ $candidature->code_candidat_def ?? $candidature->code_candidat_temp }}</span>
+                </div>
+                <div class="footer-right">
+                    Imprimée le {{ now()->format('d/m/Y') }}
+                </div>
+            </div>
 
-        <!-- Code Temporaire -->
-        <div class="code-section">
-            <p style="margin-bottom: 5px; font-size: 14px;">Code Candidat Temporaire</p>
-            <div class="code">{{ $candidature->code_candidat_temp }}</div>
-        </div>
-
-        <!-- Informations du Concours -->
-        <div class="section-title">INFORMATIONS DU CONCOURS</div>
-        <div class="info-grid">
-            <div class="info-row">
-                <div class="info-label">Concours</div>
-                <div class="info-value">{{ $concours->libelle_concours }}</div>
-            </div>
-            <div class="info-row">
-                <div class="info-label">Date d'examen</div>
-                <div class="info-value">{{ $concours->date_examen->format('d/m/Y à H:i') }}</div>
-            </div>
-            <div class="info-row">
-                <div class="info-label">Date limite d'inscription</div>
-                <div class="info-value">{{ $concours->date_limite->format('d/m/Y à H:i') }}</div>
-            </div>
-            <div class="info-row">
-                <div class="info-label">Frais d'inscription</div>
-                <div class="info-value">{{ number_format($concours->frais_inscription, 0, ',', ' ') }} FCFA</div>
-            </div>
-        </div>
-
-        <!-- Informations du Candidat -->
-        <div class="section-title">INFORMATIONS DU CANDIDAT</div>
-        <div class="info-grid">
-            <div class="info-row">
-                <div class="info-label">Nom complet</div>
-                <div class="info-value">{{ $utilisateur->nom }} {{ $utilisateur->prenom }}</div>
-            </div>
-            <div class="info-row">
-                <div class="info-label">Date de naissance</div>
-                <div class="info-value">{{ \Carbon\Carbon::parse($candidat->date_naissance)->format('d/m/Y') }}</div>
-            </div>
-            <div class="info-row">
-                <div class="info-label">Lieu de naissance</div>
-                <div class="info-value">{{ $candidat->lieu_naissance }}</div>
-            </div>
-            <div class="info-row">
-                <div class="info-label">Sexe</div>
-                <div class="info-value">{{ $candidat->sexe == 'M' ? 'Masculin' : 'Féminin' }}</div>
-            </div>
-            <div class="info-row">
-                <div class="info-label">CNI</div>
-                <div class="info-value">{{ $candidat->numero_cni }}</div>
-            </div>
-            <div class="info-row">
-                <div class="info-label">Nationalité</div>
-                <div class="info-value">{{ $candidat->nationalite }}</div>
-            </div>
-            <div class="info-row">
-                <div class="info-label">Email</div>
-                <div class="info-value">{{ $utilisateur->email }}</div>
-            </div>
-            <div class="info-row">
-                <div class="info-label">Téléphone</div>
-                <div class="info-value">{{ $utilisateur->telephone ?? 'N/A' }}</div>
-            </div>
-            <div class="info-row">
-                <div class="info-label">Adresse</div>
-                <div class="info-value">{{ $candidat->adresse }}</div>
-            </div>
-        </div>
-
-        <!-- Informations Scolaires -->
-        <div class="section-title">INFORMATIONS SCOLAIRES</div>
-        <div class="info-grid">
-            <div class="info-row">
-                <div class="info-label">Niveau scolaire</div>
-                <div class="info-value">{{ $candidat->niveau_scolaire }}</div>
-            </div>
-            <div class="info-row">
-                <div class="info-label">Filière d'origine</div>
-                <div class="info-value">{{ $candidat->filiere_origine }}</div>
-            </div>
-            <div class="info-row">
-                <div class="info-label">Diplôme</div>
-                <div class="info-value">{{ $candidat->diplome_admission }}</div>
-            </div>
-            @if($candidat->mention)
-            <div class="info-row">
-                <div class="info-label">Mention</div>
-                <div class="info-value">{{ $candidat->mention }}</div>
-            </div>
-            @endif
-            <div class="info-row">
-                <div class="info-label">Année du diplôme</div>
-                <div class="info-value">{{ $candidat->annee_diplome }}</div>
-            </div>
-        </div>
-
-        <!-- Centres -->
-        <div class="section-title">CENTRES</div>
-        <div class="info-grid">
-            <div class="info-row">
-                <div class="info-label">Centre de dépôt</div>
-                <div class="info-value">{{ $centreDepot->libelle_centre }} - {{ $centreDepot->ville_centre }}</div>
-            </div>
-            <div class="info-row">
-                <div class="info-label">Centre d'examen</div>
-                <div class="info-value">{{ $centreExamen->libelle_centre }} - {{ $centreExamen->ville_centre }}</div>
-            </div>
-        </div>
-
-        <!-- Note importante -->
-        <div class="important-note">
-            <strong>IMPORTANT :</strong> Cette fiche est provisoire. Vous devez déposer votre dossier physique complet
-            au centre de dépôt avant le <strong>{{ $concours->date_limite->format('d/m/Y') }}</strong>.
-            Après validation, vous recevrez votre code candidat définitif.
-        </div>
-
-        <!-- Footer -->
-        <div class="footer">
-            <p><strong>Date d'inscription :</strong> {{ $candidature->date_inscription }}</p>
-            <p>Scanez le QR Code ci-dessus pour télécharger cette fiche</p>
-            <p style="margin-top: 10px;">
-                <em>{{ $ecole->devise ?? '' }}</em>
-            </p>
         </div>
     </div>
 </body>

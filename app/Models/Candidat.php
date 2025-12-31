@@ -18,6 +18,7 @@ class Candidat extends Model
         'age',
         'date_naissance',
         'lieu_naissance',
+        'photo_url',
         'region_origine',
         'ville_origine',
         'departement_origine',

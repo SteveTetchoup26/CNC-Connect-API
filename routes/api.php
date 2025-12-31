@@ -2,7 +2,7 @@
 
 use App\Http\Controllers\Admin\CandidatureController;
 use App\Http\Controllers\Api\AuthController;
-use App\Http\Controllers\Api\CandidatController;
+use App\Http\Controllers\api\CandidatController;
 use App\Http\Controllers\Api\ConcoursController;
 use App\Http\Controllers\Api\EcoleController;
 use App\Http\Controllers\Api\EpreuveController;
