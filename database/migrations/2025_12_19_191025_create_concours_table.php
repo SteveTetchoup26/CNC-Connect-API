@@ -16,7 +16,6 @@ return new class extends Migration
             $table->string('libelle_concours');
             $table->dateTime("date_limite");
             $table->dateTime("date_examen");
-            $table->double("frais_inscription");
             $table->timestamps();
         });
     }
