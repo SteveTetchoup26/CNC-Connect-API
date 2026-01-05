@@ -50,4 +50,9 @@ class Concours extends Model
     {
         return $this->belongsToMany(Session::class, 'concours_sessions');
     }
+
+    public function fraisInscription()
+    {
+        return $this->hasOne(FraisConcours::class, 'concours_id');
+    }
 }
