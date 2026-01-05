@@ -12,6 +12,8 @@ use App\Models\Notification;
 use App\Models\Concours;
 use App\Models\Centre;
 use App\Mail\CandidatureSuccessMail;
+use App\Models\FraisConcours;
+use App\Services\OcrService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -27,9 +29,15 @@ class CandidatController extends Controller
     /**
      * Inscription d'un candidat à un concours
      */
+    protected $ocrService;
+
+    public function __construct(OcrService $ocrService)
+    {
+        $this->ocrService = $ocrService;
+    }
+
     public function inscriptionConcours(Request $request)
     {
-        // Récupérer l'utilisateur authentifié via Sanctum
         $utilisateur = $request->user();
 
         if (!$utilisateur) {
@@ -86,6 +94,15 @@ class CandidatController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
+        // Récupérer les frais du concours
+        $fraisConcours = FraisConcours::where('concours_id', $request->concours_id)->first();
+
+        if (!$fraisConcours) {
+            return response()->json([
+                'message' => 'Les informations de frais pour ce concours ne sont pas disponibles'
+            ], 404);
+        }
+
         // Vérifier si le candidat existe déjà pour l'utilisateur authentifié
         $candidatExistant = Candidat::where('utilisateur_id', $utilisateur->id)->first();
 
@@ -103,19 +120,66 @@ class CandidatController extends Controller
             }
         }
 
+        // VÉRIFICATION OCR DE LA FICHE DE PAIEMENT
+        $verificationOCR = null; // Stocker les résultats pour sauvegarde ultérieure
+
+        if ($request->hasFile('fiche_paiement')) {
+            $fichePaiement = $request->file('fiche_paiement');
+            $extension = strtolower($fichePaiement->getClientOriginalExtension());
+
+            // Traiter uniquement les images (pas les PDF pour l'instant)
+            if (in_array($extension, ['jpg', 'jpeg', 'png'])) {
+                // Obtenir le chemin temporaire du fichier
+                $cheminTemp = $fichePaiement->getRealPath();
+
+                // Extraire les informations avec OCR
+                $infosExtraites = $this->ocrService->extraireInfosPaiement($cheminTemp);
+
+                if ($infosExtraites) {
+                    // Vérifier la correspondance avec les frais du concours
+                    $verificationOCR = $this->ocrService->verifierCorrespondance($infosExtraites, $fraisConcours);
+
+                    Log::info('Vérification OCR:', $verificationOCR);
+
+                    if (!$verificationOCR['valide']) {
+                        return response()->json([
+                            'message' => 'La fiche de paiement ne correspond pas aux informations du concours',
+                            'erreurs' => $verificationOCR['erreurs'],
+                            'infos_extraites' => $verificationOCR['infos_extraites'],
+                            'infos_attendues' => [
+                                'montant' => $fraisConcours->montant_frais,
+                                'banque' => $fraisConcours->nom_banque,
+                                'numero_compte' => $fraisConcours->numero_compte
+                            ]
+                        ], 422);
+                    }
+                } else {
+                    // Si l'OCR échoue, on peut soit rejeter, soit continuer avec un avertissement
+                    Log::warning('Échec de l\'extraction OCR pour l\'utilisateur ' . $utilisateur->id);
+
+                    // Option 1: Rejeter l'inscription
+                    return response()->json([
+                        'message' => 'Impossible de lire la fiche de paiement. Veuillez soumettre une image claire et lisible.'
+                    ], 422);
+
+                    // Option 2: Continuer avec un avertissement (décommenter si préféré)
+                    // Log::warning('Inscription acceptée malgré l\'échec OCR');
+                }
+            }
+        }
+
         DB::beginTransaction();
 
         try {
             // 1. Créer ou mettre à jour le candidat
             $candidatData = $request->except(['fiche_paiement', 'concours_id', 'centre_depot_id', 'centre_examen_id']);
-            $candidatData['utilisateur_id'] = $utilisateur->id; // Ajouter l'ID de l'utilisateur authentifié
+            $candidatData['utilisateur_id'] = $utilisateur->id;
 
             if ($request->hasFile('photo')) {
                 $photoFile = $request->file('photo');
                 $photoFilename = 'photo_' . $utilisateur->id . '_' . time() . '.' . $photoFile->getClientOriginalExtension();
                 $photoPath = $photoFile->storeAs('photos_candidats', $photoFilename, 'public');
-
-                $candidatData['photo_url'] = $photoPath; // Stocker le chemin
+                $candidatData['photo_url'] = $photoPath;
             }
 
             if ($candidatExistant) {
@@ -131,16 +195,34 @@ class CandidatController extends Controller
                 $filename = 'paiement_' . $candidat->id . '_' . time() . '.' . $file->getClientOriginalExtension();
                 $path = $file->storeAs('fiches_paiement', $filename, 'public');
 
-                FichePaiement::create([
+                // Créer la fiche de paiement avec les résultats OCR si disponibles
+                $fichePaiementData = [
                     'fichier_url' => $path,
                     'candidat_id' => $candidat->id
+                ];
+
+                // Ajouter les données OCR si la vérification a été effectuée
+                if ($verificationOCR !== null) {
+                    $fichePaiementData['ocr_verifie'] = true;
+                    $fichePaiementData['ocr_donnees'] = json_encode($verificationOCR['infos_extraites']);
+                    $fichePaiementData['ocr_date_verification'] = now();
+                    $fichePaiementData['ocr_erreurs'] = !empty($verificationOCR['erreurs'])
+                        ? implode(' | ', $verificationOCR['erreurs'])
+                        : null;
+                }
+
+                $fichePaiementCreee = FichePaiement::create($fichePaiementData);
+
+                Log::info('Fiche de paiement créée avec OCR', [
+                    'fiche_id' => $fichePaiementCreee->id,
+                    'ocr_verifie' => $fichePaiementCreee->ocr_verifie
                 ]);
             }
 
             // 3. Générer le code temporaire
             $codeTemporaire = $this->genererCodeTemporaire($request->concours_id, $candidat->id);
 
-            // 4. Créer la candidature (sans QR code pour l'instant)
+            // 4. Créer la candidature
             $candidature = Candidature::create([
                 'candidat_id' => $candidat->id,
                 'concours_id' => $request->concours_id,
@@ -172,7 +254,7 @@ class CandidatController extends Controller
                 'candidature_id' => $candidature->id
             ]);
 
-            // 8. Envoyer l'email avec la fiche PDF
+            // 8. Envoyer l'email
             $downloadUrl = route('candidature.download.fiche', ['id' => $candidature->id]);
 
             try {
@@ -180,20 +262,32 @@ class CandidatController extends Controller
                     new CandidatureSuccessMail($candidat, $candidature, $concours, $downloadUrl)
                 );
             } catch (\Exception $emailError) {
-                // Log l'erreur mais continue le processus
                 Log::error('Erreur envoi email: ' . $emailError->getMessage());
             }
 
             DB::commit();
 
-            return response()->json([
-                'message' => 'Inscription réussie',
+            // Préparer la réponse avec les informations OCR
+            $response = [
+                'message' => 'Inscription réussie. Votre fiche de paiement a été vérifiée avec succès.',
                 'candidat' => $candidat,
                 'candidature' => $candidature->load(['concours', 'centreDepot', 'centreExamen']),
                 'code_temporaire' => $codeTemporaire,
                 'statut' => 'EN_ATTENTE',
                 'download_url' => $downloadUrl
-            ], 201);
+            ];
+
+            // Ajouter les informations de vérification OCR si disponibles
+            if ($verificationOCR !== null) {
+                $response['verification_ocr'] = [
+                    'statut' => 'validé',
+                    'montant_detecte' => $verificationOCR['infos_extraites']['montant'] ?? null,
+                    'banque_detectee' => $verificationOCR['infos_extraites']['banque'] ?? null,
+                    'correspondances' => $verificationOCR['correspondances']
+                ];
+            }
+
+            return response()->json($response, 201);
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -204,18 +298,23 @@ class CandidatController extends Controller
         }
     }
 
+    private function genererCodeTemporaire($concoursId, $candidatId)
+    {
+        return 'TEMP-' . $concoursId . '-' . $candidatId . '-' . time();
+    }
+
     /**
      * Générer un code temporaire unique
      */
-    private function genererCodeTemporaire($concours_id, $candidat_id)
-    {
-        $prefix = 'TEMP';
-        $concoursCode = str_pad($concours_id, 4, '0', STR_PAD_LEFT);
-        $candidatCode = str_pad($candidat_id, 6, '0', STR_PAD_LEFT);
-        $random = strtoupper(Str::random(4));
+    // private function genererCodeTemporaire($concours_id, $candidat_id)
+    // {
+    //     $prefix = 'TEMP';
+    //     $concoursCode = str_pad($concours_id, 4, '0', STR_PAD_LEFT);
+    //     $candidatCode = str_pad($candidat_id, 6, '0', STR_PAD_LEFT);
+    //     $random = strtoupper(Str::random(4));
 
-        return "{$prefix}-{$concoursCode}-{$candidatCode}-{$random}";
-    }
+    //     return "{$prefix}-{$concoursCode}-{$candidatCode}-{$random}";
+    // }
 
     /**
      * Afficher les informations du candidat authentifié

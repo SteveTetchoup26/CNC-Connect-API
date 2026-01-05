@@ -51,7 +51,7 @@ class Concours extends Model
         return $this->belongsToMany(Session::class, 'concours_sessions');
     }
 
-    public function fraisInscription()
+    public function fraisConcours()
     {
         return $this->hasOne(FraisConcours::class, 'concours_id');
     }

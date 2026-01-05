@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Concours;
+use App\Models\FraisConcours;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -21,12 +22,13 @@ class ConcoursController extends Controller
                 $query->latest()->limit(1);
             },
             // Charger les filières et l'école associée
-            'concoursFilieres.filiere.departement.ecole'
+            'concoursFilieres.filiere.departement.ecole',
+            // Charger les informations de frais
+            'fraisConcours'
         ])->latest()->get();
 
         return response()->json($concours);
     }
-
 
     /**
      * Créer un nouveau concours
@@ -37,7 +39,6 @@ class ConcoursController extends Controller
             'libelle_concours' => 'required|string|max:255',
             'date_limite' => 'required|date',
             'date_examen' => 'required|date|after:date_limite',
-            'frais_inscription' => 'required|numeric|min:0',
 
             // Filieres
             'filieres' => 'required|array|min:1',
@@ -46,6 +47,12 @@ class ConcoursController extends Controller
 
             // Session unique
             'session_id' => 'required|exists:sessions,id',
+
+            // Informations de frais
+            'frais_concours' => 'required|array',
+            'frais_concours.montant_frais' => 'required|numeric|min:0',
+            'frais_concours.nom_banque' => 'required|string|max:255',
+            'frais_concours.numero_compte' => 'required|string|max:50',
         ]);
 
         if ($validator->fails()) {
@@ -57,7 +64,7 @@ class ConcoursController extends Controller
         try {
             // 1️⃣ Créer le concours
             $concours = Concours::create($request->only([
-                'libelle_concours', 'date_limite', 'date_examen', 'frais_inscription'
+                'libelle_concours', 'date_limite', 'date_examen'
             ]));
 
             // 2️⃣ Associer les filières avec nombre de places
@@ -68,11 +75,19 @@ class ConcoursController extends Controller
             // 3️⃣ Associer la session unique
             $concours->sessions()->attach($request->session_id);
 
+            // 4️⃣ Créer les informations de frais de concours
+            FraisConcours::create([
+                'montant_frais' => $request->frais_concours['montant_frais'],
+                'nom_banque' => $request->frais_concours['nom_banque'],
+                'numero_compte' => $request->frais_concours['numero_compte'],
+                'concours_id' => $concours->id,
+            ]);
+
             DB::commit();
 
             return response()->json([
                 'message' => 'Concours créé avec succès',
-                'concours' => $concours->load('filieres', 'sessions')
+                'concours' => $concours->load('filieres', 'sessions', 'fraisConcours')
             ], 201);
 
         } catch (\Exception $e) {
@@ -82,7 +97,6 @@ class ConcoursController extends Controller
                 'error' => $e->getMessage()
             ], 500);
         }
-
     }
 
     /**
@@ -90,7 +104,7 @@ class ConcoursController extends Controller
      */
     public function show($id)
     {
-        $concours = Concours::with('specification')->find($id);
+        $concours = Concours::with(['specification', 'fraisConcours'])->find($id);
 
         if (!$concours) {
             return response()->json(['message' => 'Concours non trouvé'], 404);
@@ -104,7 +118,7 @@ class ConcoursController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $concours = Concours::find($id);
+        $concours = Concours::with('fraisConcours')->find($id);
 
         if (!$concours) {
             return response()->json(['message' => 'Concours non trouvé'], 404);
@@ -114,15 +128,60 @@ class ConcoursController extends Controller
             'libelle_concours' => 'sometimes|required|string|max:255',
             'date_limite' => 'sometimes|required|date',
             'date_examen' => 'sometimes|required|date',
-            'frais_inscription' => 'sometimes|required|numeric|min:0',
+
+            // Informations de frais (optionnelles pour la mise à jour)
+            'frais_concours' => 'sometimes|array',
+            'frais_concours.montant_frais' => 'sometimes|required_with:frais_concours|numeric|min:0',
+            'frais_concours.nom_banque' => 'sometimes|required_with:frais_concours|string|max:255',
+            'frais_concours.numero_compte' => 'sometimes|required_with:frais_concours|string|max:50',
         ]);
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        $concours->update($request->all());
-        return response()->json($concours);
+        DB::beginTransaction();
+
+        try {
+            // 1️⃣ Mettre à jour le concours
+            $concours->update($request->only([
+                'libelle_concours', 'date_limite', 'date_examen'
+            ]));
+
+            // 2️⃣ Mettre à jour ou créer les informations de frais
+            if ($request->has('frais_concours')) {
+                if ($concours->fraisConcours) {
+                    // Mettre à jour les frais existants
+                    $concours->fraisConcours->update([
+                        'montant_frais' => $request->frais_concours['montant_frais'] ?? $concours->fraisConcours->montant_frais,
+                        'nom_banque' => $request->frais_concours['nom_banque'] ?? $concours->fraisConcours->nom_banque,
+                        'numero_compte' => $request->frais_concours['numero_compte'] ?? $concours->fraisConcours->numero_compte,
+                    ]);
+                } else {
+                    // Créer de nouveaux frais
+                    FraisConcours::create([
+                        'montant_frais' => $request->frais_concours['montant_frais'],
+                        'nom_banque' => $request->frais_concours['nom_banque'],
+                        'numero_compte' => $request->frais_concours['numero_compte'],
+                        'concours_id' => $concours->id,
+                    ]);
+                }
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Concours mis à jour avec succès',
+                'concours' => $concours->load('fraisConcours')
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'message' => 'Erreur lors de la mise à jour du concours',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
@@ -136,8 +195,26 @@ class ConcoursController extends Controller
             return response()->json(['message' => 'Concours non trouvé'], 404);
         }
 
-        $concours->delete();
-        return response()->json(['message' => 'Concours supprimé avec succès']);
+        DB::beginTransaction();
+
+        try {
+            // Supprimer les frais associés (cascade est configurée dans la migration)
+            $concours->fraisConcours()->delete();
+
+            // Supprimer le concours
+            $concours->delete();
+
+            DB::commit();
+
+            return response()->json(['message' => 'Concours et ses frais associés supprimés avec succès']);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'message' => 'Erreur lors de la suppression du concours',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
@@ -146,7 +223,7 @@ class ConcoursController extends Controller
     public function getOpenConcours()
     {
         $concours = Concours::where('date_limite', '>=', now())
-            ->with('specification')
+            ->with(['specification', 'fraisConcours'])
             ->latest()
             ->get();
 

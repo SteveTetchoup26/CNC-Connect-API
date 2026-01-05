@@ -12,6 +12,10 @@ class FichePaiement extends Model
     protected $fillable = [
         'fichier_url',
         'candidat_id',
+        'ocr_verifie',
+        'ocr_donnees',
+        'ocr_date_verification',
+        'ocr_erreurs',
     ];
 
     protected $casts = [
