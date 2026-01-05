@@ -15,6 +15,12 @@ return new class extends Migration
             $table->id();
             $table->string("fichier_url");
             $table->integer("candidat_id");
+
+            $table->boolean('ocr_verifie')->default(false);
+            $table->json('ocr_donnees')->nullable();
+            $table->timestamp('ocr_date_verification')->nullable();
+            $table->text('ocr_erreurs')->nullable();
+
             $table->foreign('candidat_id')->references('id')->on('candidats')->onDelete('cascade');
 
             $table->timestamps();
