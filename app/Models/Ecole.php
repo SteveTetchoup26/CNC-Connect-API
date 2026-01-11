@@ -14,6 +14,7 @@ class Ecole extends Model
         'code_ecole',
         'localisation',
         'logo_url',
+        'banniere_url',
         'bp_ecole',
         'email_ecole',
         'siteweb_ecole',

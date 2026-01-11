@@ -23,7 +23,8 @@ class EcoleController extends Controller
             'ecole.code_ecole' => 'required|string|unique:ecoles,code_ecole',
             'ecole.localisation' => 'required|string',
             'ecole.email_ecole' => 'required|email|unique:ecoles,email_ecole',
-            'ecole.logo' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048', // Validation du logo
+            'ecole.logo' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'ecole.banniere' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'ecole.bp_ecole' => 'nullable|string',
             'ecole.siteweb_ecole' => 'nullable|url',
             'ecole.devise' => 'nullable|string',
@@ -49,10 +50,17 @@ class EcoleController extends Controller
         $ecole = DB::transaction(function () use ($request) {
             // Traitement du logo
             $logoPath = null;
+            $bannierePath = null;
             if ($request->hasFile('ecole.logo')) {
                 $logoFile = $request->file('ecole.logo');
                 $logoFilename = 'logo_' . time() . '_' . $logoFile->getClientOriginalName();
                 $logoPath = $logoFile->storeAs('logos_ecoles', $logoFilename, 'public');
+            }
+
+            if ($request->hasFile('ecole.banniere')) {
+                $banniereFile = $request->file('ecole.banniere');
+                $banniereFilename = 'banniere_' . time() . '_' . $banniereFile->getClientOriginalName();
+                $bannierePath = $banniereFile->storeAs('bannieres_ecoles', $banniereFilename, 'public');
             }
 
             // Traitement de l'emblème (optionnel)
@@ -66,12 +74,13 @@ class EcoleController extends Controller
             /** 1️⃣ ÉCOLE */
             $ecoleData = $request->ecole;
             $ecoleData['logo_url'] = $logoPath;
+            $ecoleData['banniere_url'] = $bannierePath;
             if ($emblemePath) {
                 $ecoleData['embleme_ecole'] = $emblemePath;
             }
 
             // Retirer les fichiers du tableau de données
-            unset($ecoleData['logo'], $ecoleData['embleme_ecole']);
+            unset($ecoleData['logo'], $ecoleData['banniere'], $ecoleData['embleme_ecole']);
 
             $ecole = Ecole::create($ecoleData);
 
@@ -138,6 +147,7 @@ class EcoleController extends Controller
             'localisation' => 'sometimes|string',
             'email_ecole' => 'sometimes|email|unique:ecoles,email_ecole,' . $id,
             'logo' => 'sometimes|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'banniere' => 'sometimes|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'bp_ecole' => 'nullable|string',
             'siteweb_ecole' => 'nullable|url',
             'devise' => 'nullable|string',
@@ -159,6 +169,17 @@ class EcoleController extends Controller
                 $ecole->logo_url = $logoPath;
             }
 
+            if ($request->hasFile('banniere')) {
+                if ($ecole->banniere_url && Storage::disk('public')->exists($ecole->banniere_url)) {
+                    Storage::disk('public')->delete($ecole->banniere_url);
+                }
+
+                $banniereFile = $request->file('banniere');
+                $banniereFilename = 'banniere_' . time() . '_' . $banniereFile->getClientOriginalName();
+                $bannierePath = $banniereFile->storeAs('bannieres_ecoles', $banniereFilename, 'public');
+                $ecole->banniere_url = $bannierePath;
+            }
+
             // Mettre à jour l'emblème si fourni
             if ($request->hasFile('embleme_ecole')) {
                 // Supprimer l'ancien emblème
@@ -173,7 +194,7 @@ class EcoleController extends Controller
             }
 
             // Mettre à jour les autres champs
-            $ecole->fill($request->except(['logo', 'embleme_ecole']));
+            $ecole->fill($request->except(['logo', 'banniere', 'embleme_ecole']));
             $ecole->save();
         });
 
@@ -181,6 +202,7 @@ class EcoleController extends Controller
             'message' => 'École mise à jour avec succès',
             'data' => $ecole,
             'logo_url' => $ecole->logo_url ? Storage::url($ecole->logo_url) : null,
+            'banniere_url' => $ecole->banniere_url ? Storage::url($ecole->banniere_url) : null,
             'embleme_url' => $ecole->embleme_ecole ? Storage::url($ecole->embleme_ecole) : null,
         ]);
     }

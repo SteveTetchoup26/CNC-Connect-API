@@ -159,20 +159,18 @@ class AuthController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Inscription réussie',
-                'data' => [
-                    'user' => [
-                        'id' => $utilisateur->id,
-                        'email' => $utilisateur->email,
-                        'nom' => $utilisateur->nom,
-                        'prenom' => $utilisateur->prenom,
-                        'telephone' => $utilisateur->telephone,
-                        'roles' => $utilisateur->roles->pluck('libelle_role'),
-                        'candidat' => $utilisateur->candidat,
-                        'created_at' => $utilisateur->created_at,
-                    ],
-                    'token' => $token,
-                    'token_type' => 'Bearer',
-                ],
+                // 'data' => [
+                //     'user' => [
+                //         'id' => $utilisateur->id,
+                //         'email' => $utilisateur->email,
+                //         'nom' => $utilisateur->nom,
+                //         'prenom' => $utilisateur->prenom,
+                //         'telephone' => $utilisateur->telephone,
+                //         'roles' => $utilisateur->roles->pluck('libelle_role'),
+                //         'candidat' => $utilisateur->candidat,
+                //         'created_at' => $utilisateur->created_at,
+                //     ],
+                // ],
             ], 201);
 
         } catch (\Exception $e) {
@@ -279,9 +277,9 @@ class AuthController extends Controller
                         'nom' => $utilisateur->nom,
                         'prenom' => $utilisateur->prenom,
                         'telephone' => $utilisateur->telephone,
-                        'roles' => $utilisateur->roles->pluck('libelle_role'),
-                        'candidat' => $utilisateur->candidat,
-                        'administrateur' => $utilisateur->administrateur,
+                        'roles' => $utilisateur->roles->pluck('libelle'),
+                        // 'candidat' => $utilisateur->candidat,
+                        // 'administrateur' => $utilisateur->administrateur,
                     ],
                     'token' => $token,
                     'token_type' => 'Bearer',
@@ -398,11 +396,11 @@ class AuthController extends Controller
                         'nom' => $utilisateur->nom,
                         'prenom' => $utilisateur->prenom,
                         'telephone' => $utilisateur->telephone,
-                        'roles' => $utilisateur->roles,
+                        'roles' => $utilisateur->roles->pluck('libelle'),
                         'candidat' => $utilisateur->candidat,
                         'administrateur' => $utilisateur->administrateur,
-                        'created_at' => $utilisateur->created_at,
-                        'updated_at' => $utilisateur->updated_at,
+                        // 'created_at' => $utilisateur->created_at,
+                        // 'updated_at' => $utilisateur->updated_at,
                     ],
                 ],
             ], 200);

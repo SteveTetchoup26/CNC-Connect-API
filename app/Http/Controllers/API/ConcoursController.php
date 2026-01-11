@@ -7,6 +7,7 @@ use App\Models\Concours;
 use App\Models\FraisConcours;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
 class ConcoursController extends Controller
@@ -16,18 +17,29 @@ class ConcoursController extends Controller
      */
     public function index()
     {
-        $concours = Concours::with([
+        try {
+            $concours = Concours::with([
             // Charger uniquement la dernière session
             'sessions' => function($query) {
-                $query->latest()->limit(1);
+                $query
+                    ->orderBy('sessions.created_at', 'desc')
+                    ->limit(1);
             },
             // Charger les filières et l'école associée
             'concoursFilieres.filiere.departement.ecole',
             // Charger les informations de frais
             'fraisConcours'
-        ])->latest()->get();
+            ])->latest()->get();
 
-        return response()->json($concours);
+            return response()->json($concours);
+
+        } catch (\Exception $e) {
+            Log::error('Erreur lors de la récupération des concours: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'Erreur lors de la récupération des concours',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
@@ -104,7 +116,21 @@ class ConcoursController extends Controller
      */
     public function show($id)
     {
-        $concours = Concours::with(['specification', 'fraisConcours'])->find($id);
+        $concours = Concours::with([
+            'specification',
+            'fraisConcours',
+            'sessions' => function($query) {
+                $query
+                    ->orderBy('sessions.created_at', 'desc')
+                    ->limit(1);
+            },
+            'concoursFilieres' => function($query) {
+                $query->with([
+                    'filiere.departement.ecole',
+                    'filiere.niveaux'
+                ]);
+            }
+            ])->find($id);
 
         if (!$concours) {
             return response()->json(['message' => 'Concours non trouvé'], 404);
