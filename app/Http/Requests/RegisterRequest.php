@@ -29,7 +29,7 @@ class RegisterRequest extends FormRequest
             'email.email' => 'L\'email doit être valide',
             'email.unique' => 'Cet email est déjà utilisé',
             'password.required' => 'Le mot de passe est requis',
-            'password.min' => 'Le mot de passe doit contenir au moins 8 caractères',
+            'password.min' => 'Le mot de passe doit contenir au moins 6 caractères',
             'password.confirmed' => 'Les mots de passe ne correspondent pas',
         ];
     }
