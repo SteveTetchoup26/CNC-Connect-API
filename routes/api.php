@@ -20,14 +20,18 @@ Route::prefix('v1')->group(function () {
 
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/login', [AuthController::class, 'login']);
+    Route::get('/concours', [ConcoursController::class, 'index']);
+    Route::get('/concours/{id}', [ConcoursController::class, 'show']);
+
 
     Route::middleware('auth:sanctum')->group(function () {
         Route::get('/me', [AuthController::class, 'user']);
         Route::post('/logout', [AuthController::class, 'logout']);
         Route::post('/refresh-token', [AuthController::class, 'refreshToken']);
 
-
-        Route::apiResource('/concours', ConcoursController::class);
+        Route::post('/concours', [ ConcoursController::class, 'store']);
+        Route::put('/concours', [ConcoursController::class, 'update']);
+        Route::delete('/concours', [ConcoursController::class, 'destroy']);
         Route::post('/concours/open', [ConcoursController::class, 'getOpenConcours']);
 
         Route::apiResource('/spec-concours', SpecificationConcoursController::class);
