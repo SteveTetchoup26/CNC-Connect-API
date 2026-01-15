@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\CandidatureController;
+use App\Http\Controllers\Admin\CentreController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\api\CandidatController;
 use App\Http\Controllers\Api\ConcoursController;
@@ -46,6 +47,12 @@ Route::prefix('v1')->group(function () {
         Route::get('/mon-profil-complet', [CandidatController::class, 'getProfilByUtilisateur']);
         Route::get('/ma-fiche-paiement', [CandidatController::class, 'downloadFichePaiement']);
         Route::delete('/mon-profil', [CandidatController::class, 'destroy']);
+
+        Route::prefix('centres')->group(function () {
+            Route::get('/', [CentreController::class, 'index']);
+            Route::get('/type/{type}', [CentreController::class, 'byType']);
+            Route::get('/type/{type}/region/{regionId}', [CentreController::class, 'byTypeAndRegion']);
+        });
 
         Route::prefix('admin')->middleware('role:ADMINISTRATEUR')->group(function () {
 

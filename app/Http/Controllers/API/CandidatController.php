@@ -52,7 +52,7 @@ class CandidatController extends Controller
             'adresse' => 'required|string|max:255',
             'nationalite' => 'required|string|max:100',
             'sexe' => 'required|in:M,F',
-            'age' => 'required|integer|min:16|max:100',
+            'age' => 'nullable|integer|min:16|max:100',
             'date_naissance' => 'required|date|before:today',
             'lieu_naissance' => 'required|string|max:255',
             'region_origine' => 'required|string|max:255',
@@ -269,7 +269,7 @@ class CandidatController extends Controller
 
             // Préparer la réponse avec les informations OCR
             $response = [
-                'message' => 'Inscription réussie. Votre fiche de paiement a été vérifiée avec succès.',
+                'message' => 'Inscription réussie. Veuillez vérifier votre boîte mail.',
                 'candidat' => $candidat,
                 'candidature' => $candidature->load(['concours', 'centreDepot', 'centreExamen']),
                 'code_temporaire' => $codeTemporaire,
@@ -278,14 +278,14 @@ class CandidatController extends Controller
             ];
 
             // Ajouter les informations de vérification OCR si disponibles
-            if ($verificationOCR !== null) {
-                $response['verification_ocr'] = [
-                    'statut' => 'validé',
-                    'montant_detecte' => $verificationOCR['infos_extraites']['montant'] ?? null,
-                    'banque_detectee' => $verificationOCR['infos_extraites']['banque'] ?? null,
-                    'correspondances' => $verificationOCR['correspondances']
-                ];
-            }
+            // if ($verificationOCR !== null) {
+            //     $response['verification_ocr'] = [
+            //         'statut' => 'validé',
+            //         'montant_detecte' => $verificationOCR['infos_extraites']['montant'] ?? null,
+            //         'banque_detectee' => $verificationOCR['infos_extraites']['banque'] ?? null,
+            //         'correspondances' => $verificationOCR['correspondances']
+            //     ];
+            // }
 
             return response()->json($response, 201);
 
