@@ -29,7 +29,7 @@ class SessionSeeder extends Seeder
                 'description_session' => 'Session académique 2024-2025',
             ],
             [
-                'libelle_session' => 'Session 2025 - 2026',
+                'libelle_session' => 'Session 2026 - 2027',
                 'description_session' => 'Session académique 2025-2026',
             ],
         ];
