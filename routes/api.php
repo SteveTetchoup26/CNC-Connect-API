@@ -31,8 +31,8 @@ Route::prefix('v1')->group(function () {
         Route::post('/refresh-token', [AuthController::class, 'refreshToken']);
 
         Route::post('/concours', [ ConcoursController::class, 'store']);
-        Route::put('/concours', [ConcoursController::class, 'update']);
-        Route::delete('/concours', [ConcoursController::class, 'destroy']);
+        Route::put('/concours/{id}', [ConcoursController::class, 'update']);
+        Route::delete('/concours/{id}', [ConcoursController::class, 'destroy']);
         Route::post('/concours/open', [ConcoursController::class, 'getOpenConcours']);
 
         Route::apiResource('/spec-concours', SpecificationConcoursController::class);
