@@ -62,4 +62,77 @@ class Candidature extends Model
     {
         return $this->belongsTo(Centre::class, 'centre_examen_id');
     }
+
+    public function rappel()
+    {
+        return $this->hasOne(CandidatureRappel::class);
+    }
+
+    // ✅ SCOPE UTILES
+
+    /**
+     * Scope pour filtrer par statut
+     */
+    public function scopeAvecStatut($query, string $statut)
+    {
+        return $query->where('statut', $statut);
+    }
+
+    /**
+     * Scope pour les candidatures du candidat connecté
+     */
+    public function scopeDuCandidat($query, int $candidatId)
+    {
+        return $query->where('candidat_id', $candidatId);
+    }
+
+    /**
+     * Scope pour charger toutes les relations nécessaires
+     */
+    public function scopeAvecRelations($query)
+    {
+        return $query->with([
+            'candidat.utilisateur',
+            'concours.concoursFilieres.filiere.departement.ecole',
+            'concours.session',
+            'centreDepot',
+            'centreExamen',
+            'historiques.etat',
+            'rappel'
+        ]);
+    }
+
+    /**
+     * Vérifier si la candidature a un rappel actif
+     */
+    public function hasRappelActif(): bool
+    {
+        return $this->rappel()->where('email_envoye', false)->exists();
+    }
+
+    /**
+     * Obtenir le statut formaté
+     */
+    public function getStatutFormate(): string
+    {
+        $statuts = [
+            'EN_ATTENTE' => 'En attente',
+            'VALIDEE' => 'Validée',
+            'REJETEE' => 'Rejetée',
+            'ADMIS' => 'Admis',
+            'NON_ADMIS' => 'Non admis',
+        ];
+
+        return $statuts[$this->statut] ?? $this->statut;
+    }
+
+    /**
+     * Vérifier si la candidature peut recevoir un rappel
+     */
+    public function peutRecevoirRappel(): bool
+    {
+        // Ne peut recevoir un rappel que si validée et examen pas encore passé
+        return $this->statut === 'VALIDEE'
+            && $this->concours->date_examen > now();
+    }
 }
