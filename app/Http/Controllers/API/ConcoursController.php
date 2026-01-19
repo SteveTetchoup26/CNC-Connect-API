@@ -15,32 +15,73 @@ class ConcoursController extends Controller
     /**
      * Afficher la liste des concours
      */
-    public function index()
-    {
-        try {
-            $concours = Concours::with([
-            // Charger uniquement la dernière session
-            'sessions' => function($query) {
-                $query
-                    ->orderBy('sessions.created_at', 'desc')
-                    ->limit(1);
+    public function index(Request $request)
+{
+    try {
+        $perPage = $request->get('per_page', 6);
+
+        $query = Concours::with([
+            'sessions' => function ($query) {
+                $query->orderBy('sessions.created_at', 'desc')->limit(1);
             },
-            // Charger les filières et l'école associée
             'concoursFilieres.filiere.departement.ecole',
-            // Charger les informations de frais
             'fraisConcours'
-            ])->latest()->get();
+        ]);
 
-            return response()->json($concours);
-
-        } catch (\Exception $e) {
-            Log::error('Erreur lors de la récupération des concours: ' . $e->getMessage());
-            return response()->json([
-                'message' => 'Erreur lors de la récupération des concours',
-                'error' => $e->getMessage()
-            ], 500);
+        // 🔍 Recherche
+        if ($request->filled('search')) {
+            $query->where('libelle_concours', 'like', '%' . $request->search . '%');
         }
+
+        // 📅 Année
+        if ($request->filled('annee')) {
+            $query->whereHas('sessions', function ($q) use ($request) {
+                $q->where('annee', $request->annee);
+            });
+        }
+
+        // 🔓 Statut
+        if ($request->filled('statut')) {
+            $query->whereHas('sessions', function ($q) use ($request) {
+                $q->where('statut', $request->statut);
+            });
+        }
+
+        if ($request->filled('rubrique')) {
+            $rubrique = $request->rubrique;
+            $query->where('libelle_concours', 'LIKE', "%$rubrique%");
+        }
+
+        if ($request->boolean('raw')) { return response()->json($query->latest()->get()); }
+
+        // 🎠 MODE SLIDER (pas de pagination)
+        if ($request->boolean('slider')) {
+            return response()->json(
+                $query->latest()->take(10)->get()
+            );
+        }
+
+        // 📄 MODE PAGINÉ (page catalogue)
+        $concours = $query->latest()->paginate($perPage);
+
+        return response()->json([
+            'data' => $concours->items(),
+            'meta' => [
+                'current_page' => $concours->currentPage(),
+                'per_page' => $concours->perPage(),
+                'total' => $concours->total(),
+                'last_page' => $concours->lastPage(),
+            ]
+        ]);
+    } catch (\Exception $e) {
+        Log::error('Erreur récupération concours : ' . $e->getMessage());
+
+        return response()->json([
+            'message' => 'Erreur lors de la récupération des concours'
+        ], 500);
     }
+}
+
 
     /**
      * Créer un nouveau concours
@@ -76,7 +117,9 @@ class ConcoursController extends Controller
         try {
             // 1️⃣ Créer le concours
             $concours = Concours::create($request->only([
-                'libelle_concours', 'date_limite', 'date_examen'
+                'libelle_concours',
+                'date_limite',
+                'date_examen'
             ]));
 
             // 2️⃣ Associer les filières avec nombre de places
@@ -101,7 +144,6 @@ class ConcoursController extends Controller
                 'message' => 'Concours créé avec succès',
                 'concours' => $concours->load('filieres', 'sessions', 'fraisConcours')
             ], 201);
-
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json([
@@ -119,18 +161,18 @@ class ConcoursController extends Controller
         $concours = Concours::with([
             'specification',
             'fraisConcours',
-            'sessions' => function($query) {
+            'sessions' => function ($query) {
                 $query
                     ->orderBy('sessions.created_at', 'desc')
                     ->limit(1);
             },
-            'concoursFilieres' => function($query) {
+            'concoursFilieres' => function ($query) {
                 $query->with([
                     'filiere.departement.ecole',
                     'filiere.niveaux'
                 ]);
             }
-            ])->find($id);
+        ])->find($id);
 
         if (!$concours) {
             return response()->json(['message' => 'Concours non trouvé'], 404);
@@ -171,7 +213,9 @@ class ConcoursController extends Controller
         try {
             // 1️⃣ Mettre à jour le concours
             $concours->update($request->only([
-                'libelle_concours', 'date_limite', 'date_examen'
+                'libelle_concours',
+                'date_limite',
+                'date_examen'
             ]));
 
             // 2️⃣ Mettre à jour ou créer les informations de frais
@@ -200,7 +244,6 @@ class ConcoursController extends Controller
                 'message' => 'Concours mis à jour avec succès',
                 'concours' => $concours->load('fraisConcours')
             ]);
-
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json([
@@ -233,7 +276,6 @@ class ConcoursController extends Controller
             DB::commit();
 
             return response()->json(['message' => 'Concours et ses frais associés supprimés avec succès']);
-
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json([

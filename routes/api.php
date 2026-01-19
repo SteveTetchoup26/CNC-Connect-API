@@ -54,6 +54,10 @@ Route::prefix('v1')->group(function () {
             Route::get('/type/{type}/region/{regionId}', [CentreController::class, 'byTypeAndRegion']);
         });
 
+        Route::get('candidatures', [CandidatureController::class, 'index']);
+        Route::post('/candidatures/{id}/rappel', [CandidatureController::class, 'definirRappel']);
+
+
         Route::prefix('admin')->middleware('role:ADMINISTRATEUR')->group(function () {
 
             Route::apiResource('sessions', SessionController::class);
@@ -61,8 +65,8 @@ Route::prefix('v1')->group(function () {
 
             Route::apiResource('epreuves', EpreuveController::class);
 
-            Route::get('candidatures', [CandidatureController::class, 'index']);
             Route::get('candidatures/{id}', [CandidatureController::class, 'show']);
+
 
             Route::post('candidatures/{id}/valider', [CandidatureController::class, 'valider']);
             Route::post('candidatures/{id}/rejeter', [CandidatureController::class, 'rejeter']);
