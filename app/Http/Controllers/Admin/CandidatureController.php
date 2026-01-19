@@ -16,21 +16,71 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
+use App\Models\CandidatureRappel;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Validator;
 
 class CandidatureController extends Controller
 {
     /**
      * Liste de toutes les candidatures
      */
-    public function index()
+    // public function index()
+    // {
+    //     $candidatures = Candidature::with([
+    //         'candidat.utilisateur',
+    //         'concours.concoursFilieres.filiere.departement.ecole',
+    //         'centreDepot',
+    //         'centreExamen',
+    //         'historiques.etat'
+    //     ])->orderByDesc('date_candidature')->get();
+
+    //     return response()->json($candidatures);
+    // }
+
+    // Ajouter pagination + filtres
+    public function index(Request $request)
     {
-        $candidatures = Candidature::with([
+        $candidat = Auth::user()->candidat;
+
+        if (!$candidat) {
+            return response()->json([
+                'message' => 'Candidat non trouvé'
+            ], 404);
+        }
+
+        $query = Candidature::with([
             'candidat.utilisateur',
-            'concours',
+            'concours.concoursFilieres.filiere.departement.ecole',
             'centreDepot',
             'centreExamen',
             'historiques.etat'
-        ])->orderByDesc('date_candidature')->get();
+        ])->where('candidat_id', $candidat->id);
+
+        // Filtres
+        if ($request->has('statut') && $request->statut !== 'all') {
+            $query->where('statut', $request->statut);
+        }
+
+        if ($request->has('ecole_id')) {
+            $query->whereHas('concours.concoursFilieres.filiere.departement', function ($q) use ($request) {
+                $q->where('ecole_id', $request->ecole_id);
+            });
+        }
+
+        // Tri
+        $sortBy = $request->sort_by ?? 'date_candidature';
+        $order = $request->order ?? 'desc';
+        $query->orderBy($sortBy, $order);
+
+        // Pagination
+        $perPage = $request->per_page ?? 9;
+
+        if ($request->has('page')) {
+            $candidatures = $query->paginate($perPage);
+        } else {
+            $candidatures = $query->get();
+        }
 
         return response()->json($candidatures);
     }
@@ -40,14 +90,16 @@ class CandidatureController extends Controller
      */
     public function show(int $id)
     {
+        $candidat = Auth::user()->candidat;
+
         $candidature = Candidature::with([
             'candidat.utilisateur',
-            'concours',
+            'concours.concoursFilieres.filiere.departement.ecole',
             'centreDepot',
             'centreExamen',
-            'historiques.etat',
-            'notifications'
-        ])->findOrFail($id);
+            'historiques.etat'
+        ])->where('candidat_id', $candidat->id)
+          ->findOrFail($id);
 
         return response()->json($candidature);
     }
@@ -113,7 +165,6 @@ class CandidatureController extends Controller
                 'code_definitif' => $codeDef,
                 'candidature' => $candidature->load(['historiques.etat', 'notifications'])
             ]);
-
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json([
@@ -180,7 +231,6 @@ class CandidatureController extends Controller
                 'message' => 'Candidature rejetée',
                 'candidature' => $candidature->load(['historiques.etat', 'notifications'])
             ]);
-
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json([
@@ -237,5 +287,56 @@ class CandidatureController extends Controller
         } while (Candidature::where('code_candidat_def', $code)->exists());
 
         return $code;
+    }
+
+    /**
+     * Définir un rappel pour une candidature
+     */
+    public function definirRappel(Request $request, $id)
+    {
+        $validator = Validator::make($request->all(), [
+            'date_rappel' => 'required|date|after_or_equal:today',
+            'heure_rappel' => 'required|date_format:H:i',
+        ], [
+            'date_rappel.required' => 'La date du rappel est requise',
+            'date_rappel.after_or_equal' => 'La date du rappel doit être aujourd\'hui ou dans le futur',
+            'heure_rappel.required' => 'L\'heure du rappel est requise',
+            'heure_rappel.date_format' => 'Le format de l\'heure doit être HH:MM',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Erreur de validation',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $candidat = Auth::user()->candidat;
+
+        $candidature = Candidature::where('candidat_id', $candidat->id)
+            ->findOrFail($id);
+
+        // Vérifier que la date du rappel est avant la date de l'examen
+        $dateExamen = $candidature->concours->date_examen;
+        if ($request->date_rappel >= $dateExamen) {
+            return response()->json([
+                'message' => 'La date du rappel doit être avant la date de l\'examen'
+            ], 422);
+        }
+
+        // Supprimer l'ancien rappel s'il existe
+        CandidatureRappel::where('candidature_id', $candidature->id)->delete();
+
+        // Créer le nouveau rappel
+        $rappel = CandidatureRappel::create([
+            'candidature_id' => $candidature->id,
+            'date_rappel' => $request->date_rappel,
+            'heure_rappel' => $request->heure_rappel,
+        ]);
+
+        return response()->json([
+            'message' => 'Rappel défini avec succès',
+            'rappel' => $rappel
+        ], 201);
     }
 }

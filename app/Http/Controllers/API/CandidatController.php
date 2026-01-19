@@ -235,8 +235,8 @@ class CandidatController extends Controller
 
             // 5. Récupérer ou créer l'état "EN_ATTENTE"
             $etatEnAttente = EtatCandidature::firstOrCreate(
-                ['libelle_etat' => 'EN_ATTENTE'],
-                ['description_etat' => 'Candidature en attente de validation']
+                ['libelle_etat' => 'APPROUVEE'],
+                ['description_etat' => 'Candidature approuvée']
             );
 
             // 6. Créer l'historique de candidature
