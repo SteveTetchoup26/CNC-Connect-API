@@ -18,7 +18,7 @@ class SessionController extends Controller
      */
     public function index(): JsonResponse
     {
-        $sessions = Session::with(['historique.etat'])->get();
+        $sessions = Session::with(['historiques.etat'])->get();
         return response()->json($sessions);
     }
 
@@ -27,7 +27,7 @@ class SessionController extends Controller
      */
     public function show(int $id): JsonResponse
     {
-        $session = Session::with(['historique.etat'])->findOrFail($id);
+        $session = Session::with(['historiques.etat'])->findOrFail($id);
         return response()->json($session);
     }
 
@@ -61,12 +61,12 @@ class SessionController extends Controller
 
         return response()->json([
             'message' => 'Session créée avec succès',
-            'session' => $session->load('historique.etat')
+            'session' => $session->load('historiques.etat')
         ], 201);
     }
 
     /**
-     * Mettre à jour une session
+     * Mettre à jour une session (infos + état)
      */
     public function update(Request $request, int $id): JsonResponse
     {
@@ -75,19 +75,36 @@ class SessionController extends Controller
         $validator = Validator::make($request->all(), [
             'libelle_session' => 'sometimes|string|max:255',
             'description_session' => 'sometimes|string|max:1000',
+            'etat_id' => 'sometimes|exists:etat_sessions,id',
         ]);
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        $session->update($request->only('libelle_session', 'description_session'));
+        DB::transaction(function () use ($request, $session) {
+
+            // Mise à jour des champs simples
+            $session->update(
+                $request->only('libelle_session', 'description_session')
+            );
+
+            // Changement d’état (historisé)
+            if ($request->filled('etat_id')) {
+                HistoriqueSession::create([
+                    'session_id' => $session->id,
+                    'etat_id' => $request->etat_id,
+                    'date_etat' => now(),
+                ]);
+            }
+        });
 
         return response()->json([
             'message' => 'Session mise à jour avec succès',
-            'session' => $session
+            'session' => $session->load('historiques.etat'),
         ]);
     }
+
 
     /**
      * Changer l'état d'une session (OUVERTE / FERMEE)
@@ -121,5 +138,15 @@ class SessionController extends Controller
         return response()->json([
             'message' => 'Session supprimée avec succès'
         ]);
+    }
+
+    /**
+     * Liste des états de session
+     */
+    public function getEtatSession(): JsonResponse
+    {
+        return response()->json(
+            EtatSession::all()
+        );
     }
 }
