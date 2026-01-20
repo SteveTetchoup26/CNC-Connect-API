@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\CandidatureController;
 use App\Http\Controllers\Admin\CentreController;
+use App\Http\Controllers\Admin\RegionController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\api\CandidatController;
 use App\Http\Controllers\Api\ConcoursController;
@@ -30,7 +31,7 @@ Route::prefix('v1')->group(function () {
         Route::post('/logout', [AuthController::class, 'logout']);
         Route::post('/refresh-token', [AuthController::class, 'refreshToken']);
 
-        Route::post('/concours', [ ConcoursController::class, 'store']);
+        Route::post('/concours', [ConcoursController::class, 'store']);
         Route::put('/concours/{id}', [ConcoursController::class, 'update']);
         Route::delete('/concours/{id}', [ConcoursController::class, 'destroy']);
         Route::post('/concours/open', [ConcoursController::class, 'getOpenConcours']);
@@ -60,6 +61,13 @@ Route::prefix('v1')->group(function () {
 
         Route::prefix('admin')->middleware('role:ADMINISTRATEUR')->group(function () {
 
+            Route::post('/centres', [CentreController::class, 'store']);
+            Route::get('/centres/{id}', [CentreController::class, 'show']);
+            Route::put('/centres/{id}', [CentreController::class, 'update']);
+            Route::delete('/centres/{id}', [CentreController::class, 'destroy']);
+
+            Route::get('/regions', [RegionController::class, 'index']);
+
             Route::apiResource('sessions', SessionController::class);
             Route::apiResource('ecoles', EcoleController::class);
 
@@ -73,7 +81,6 @@ Route::prefix('v1')->group(function () {
 
             Route::put('candidatures/{id}/centres', [CandidatureController::class, 'affecterCentres']);
         });
-
     });
 });
 
