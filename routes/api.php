@@ -68,6 +68,8 @@ Route::prefix('v1')->group(function () {
 
             Route::get('/regions', [RegionController::class, 'index']);
 
+            Route::post('sessions/{id}/etat', [SessionController::class, 'changerEtat']);
+            Route::get('sessions/etats', [SessionController::class, 'getEtatSession']);
             Route::apiResource('sessions', SessionController::class);
             Route::apiResource('ecoles', EcoleController::class);
 
