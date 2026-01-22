@@ -31,12 +31,7 @@ Route::prefix('v1')->group(function () {
         Route::post('/logout', [AuthController::class, 'logout']);
         Route::post('/refresh-token', [AuthController::class, 'refreshToken']);
 
-        Route::post('/concours', [ConcoursController::class, 'store']);
-        Route::put('/concours/{id}', [ConcoursController::class, 'update']);
-        Route::delete('/concours/{id}', [ConcoursController::class, 'destroy']);
-        Route::post('/concours/open', [ConcoursController::class, 'getOpenConcours']);
-
-        Route::apiResource('/spec-concours', SpecificationConcoursController::class);
+        Route::get('/spec-concours', [SpecificationConcoursController::class, 'show']);
         Route::get('/spec-concours/concours/{concours_id}', [SpecificationConcoursController::class, 'showByConcours']);
         Route::get('/spec-concours/concours/{concours_id}/documents', [SpecificationConcoursController::class, 'getRequiredDocuments']);
 
@@ -75,11 +70,20 @@ Route::prefix('v1')->group(function () {
 
             Route::apiResource('epreuves', EpreuveController::class);
 
+            Route::post('/concours', [ConcoursController::class, 'store']);
+            Route::put('/concours/{id}', [ConcoursController::class, 'update']);
+            Route::delete('/concours/{id}', [ConcoursController::class, 'destroy']);
+            Route::post('/concours/open', [ConcoursController::class, 'getOpenConcours']);
+
+            Route::apiResource('/spec-concours', SpecificationConcoursController::class);
+
             Route::get('candidatures/{id}', [CandidatureController::class, 'show']);
 
 
             Route::post('candidatures/{id}/valider', [CandidatureController::class, 'valider']);
             Route::post('candidatures/{id}/rejeter', [CandidatureController::class, 'rejeter']);
+            Route::put('candidatures/{id}', [CandidatureController::class, 'update']);
+            Route::delete('candidatures/{id}', [CandidatureController::class, 'destroy']);
 
             Route::put('candidatures/{id}/centres', [CandidatureController::class, 'affecterCentres']);
         });
