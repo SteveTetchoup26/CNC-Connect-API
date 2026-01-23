@@ -77,6 +77,7 @@ Route::prefix('v1')->group(function () {
 
             Route::apiResource('/spec-concours', SpecificationConcoursController::class);
 
+            Route::get('candidatures', [CandidatureController::class, 'getAllForAdmin']);
             Route::get('candidatures/{id}', [CandidatureController::class, 'show']);
 
 
@@ -85,7 +86,7 @@ Route::prefix('v1')->group(function () {
             Route::put('candidatures/{id}', [CandidatureController::class, 'update']);
             Route::delete('candidatures/{id}', [CandidatureController::class, 'destroy']);
 
-            Route::put('candidatures/{id}/centres', [CandidatureController::class, 'affecterCentres']);
+            Route::post('candidatures/{id}/affecter-centres', [CandidatureController::class, 'affecterCentres']);
         });
     });
 });
