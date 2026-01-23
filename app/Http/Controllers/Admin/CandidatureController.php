@@ -86,6 +86,22 @@ class CandidatureController extends Controller
     }
 
     /**
+     * Liste de toutes les candidatures
+     */
+    public function getAllForAdmin()
+    {
+        $candidatures = Candidature::with([
+            'candidat.utilisateur',
+            'concours.concoursFilieres.filiere.departement.ecole',
+            'centreDepot',
+            'centreExamen',
+            'historiques.etat'
+        ])->orderByDesc('date_candidature')->get();
+
+        return response()->json($candidatures);
+    }
+
+    /**
      * Détails d'une candidature
      */
     public function show(int $id)
@@ -98,8 +114,10 @@ class CandidatureController extends Controller
             'centreDepot',
             'centreExamen',
             'historiques.etat'
-        ])->where('candidat_id', $candidat->id)
+        ])
             ->findOrFail($id);
+        //->where('candidat_id', $candidat->id)
+        //     ->findOrFail($id);
 
         return response()->json($candidature);
     }
@@ -415,10 +433,10 @@ class CandidatureController extends Controller
                 ->findOrFail($id);
 
             // Générer code définitif
-            $codeDef = $this->genererCodeDefinitif($candidature);
+            // $codeDef = $this->genererCodeDefinitif($candidature);
 
             $candidature->update([
-                'code_candidat_def' => $codeDef,
+                // 'code_candidat_def' => $codeDef,
                 'date_validation' => now(),
             ]);
 
@@ -437,7 +455,7 @@ class CandidatureController extends Controller
             // Créer une notification
             Notification::create([
                 'intitule' => 'Candidature validée',
-                'contenu' => "Félicitations ! Votre candidature au concours '{$candidature->concours->libelle_concours}' a été validée. Votre code candidat définitif est : {$codeDef}. Vous pouvez télécharger votre fiche de candidature définitive.",
+                'contenu' => "Félicitations ! Votre candidature au concours '{$candidature->concours->libelle_concours}' a été validée. Vous pouvez télécharger votre fiche de candidature définitive.",
                 'candidature_id' => $candidature->id
             ]);
 
@@ -461,7 +479,7 @@ class CandidatureController extends Controller
 
             return response()->json([
                 'message' => 'Candidature validée avec succès',
-                'code_definitif' => $codeDef,
+                // 'code_definitif' => $codeDef,
                 'candidature' => $candidature->load(['historiques.etat', 'notifications'])
             ]);
         } catch (\Exception $e) {
@@ -576,17 +594,17 @@ class CandidatureController extends Controller
     /**
      * Génération du code définitif
      */
-    private function genererCodeDefinitif(Candidature $candidature): string
-    {
-        do {
-            $code = 'DEF-' .
-                str_pad($candidature->concours_id, 4, '0', STR_PAD_LEFT) . '-' .
-                str_pad($candidature->id, 6, '0', STR_PAD_LEFT) . '-' .
-                strtoupper(Str::random(4));
-        } while (Candidature::where('code_candidat_def', $code)->exists());
+    // private function genererCodeDefinitif(Candidature $candidature): string
+    // {
+    //     do {
+    //         $code = 'DEF-' .
+    //             str_pad($candidature->concours_id, 4, '0', STR_PAD_LEFT) . '-' .
+    //             str_pad($candidature->id, 6, '0', STR_PAD_LEFT) . '-' .
+    //             strtoupper(Str::random(4));
+    //     } while (Candidature::where('code_candidat_def', $code)->exists());
 
-        return $code;
-    }
+    //     return $code;
+    // }
 
     /**
      * Définir un rappel pour une candidature

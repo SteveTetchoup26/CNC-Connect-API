@@ -221,12 +221,13 @@ class CandidatController extends Controller
 
             // 3. Générer le code temporaire
             $codeTemporaire = $this->genererCodeTemporaire($request->concours_id, $candidat->id);
+            $codeDef = $this->genererCodeDefinitif($request->concours_id, $candidat->id);
 
             // 4. Créer la candidature
             $candidature = Candidature::create([
                 'candidat_id' => $candidat->id,
                 'concours_id' => $request->concours_id,
-                'code_candidat_temp' => $codeTemporaire,
+                'code_candidat_def' => $codeDef,
                 'date_candidature' => now(),
                 'date_inscription' => now()->toDateString(),
                 'centre_depot_id' => $request->centre_depot_id,
@@ -301,6 +302,11 @@ class CandidatController extends Controller
     private function genererCodeTemporaire($concoursId, $candidatId)
     {
         return 'TEMP-' . $concoursId . '-' . $candidatId . '-' . time();
+    }
+
+    private function genererCodeDefinitif($concoursId, $candidatId): string
+    {
+        return 'DEF-' . $concoursId . '-' . $candidatId . '-' . time();
     }
 
     /**
