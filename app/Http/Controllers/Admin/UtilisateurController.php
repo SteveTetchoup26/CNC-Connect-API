@@ -1,8 +1,9 @@
 <?php
 
-namespace App\Http\Controllers\Api;
+namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Role;
 use App\Models\Utilisateur;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -15,7 +16,7 @@ class UtilisateurController extends Controller
      */
     public function index()
     {
-        $utilisateurs = Utilisateur::all();
+        $utilisateurs = Utilisateur::with(['roles'])->get();
         return response()->json($utilisateurs);
     }
 
@@ -24,7 +25,7 @@ class UtilisateurController extends Controller
      */
     public function show(int $id)
     {
-        $utilisateur = Utilisateur::find($id);
+        $utilisateur = Utilisateur::with(['roles'])->findOrFail($id);
 
         if (!$utilisateur) {
             return response()->json(['message' => 'Utilisateur non trouvé'], 404);
@@ -115,5 +116,11 @@ class UtilisateurController extends Controller
         $utilisateur->delete();
 
         return response()->json(['message' => 'Utilisateur supprimé avec succès']);
+    }
+
+    public function getAllRoles()
+    {
+        $roles = Role::all();
+        return response()->json($roles);
     }
 }

@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use App\Models\CandidatureRappel;
+use App\Models\Utilisateur;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 
@@ -655,5 +656,112 @@ class CandidatureController extends Controller
             'message' => 'Rappel défini avec succès',
             'rappel' => $rappel
         ], 201);
+    }
+
+    public function getCandidaturesByUser(Request $request, int $userId)
+    {
+        // Vérifier si l'utilisateur existe
+        $user = Utilisateur::find($userId);
+
+        if (!$user) {
+            return response()->json([
+                'message' => 'Utilisateur non trouvé'
+            ], 404);
+        }
+
+        // Vérifier si l'utilisateur est un candidat
+        $candidat = $user->candidat;
+
+        if (!$candidat) {
+            return response()->json([
+                'message' => 'Cet utilisateur n\'est pas un candidat',
+                'user' => [
+                    'id' => $user->id,
+                    'nom' => $user->nom,
+                    'prenom' => $user->prenom,
+                    'email' => $user->email
+                ]
+            ], 404);
+        }
+
+        // Construire la requête pour récupérer les candidatures
+        $query = Candidature::with([
+            'candidat.utilisateur',
+            'concours.concoursFilieres.filiere.departement.ecole',
+            'centreDepot',
+            'centreExamen',
+            'historiques.etat'
+        ])->where('candidat_id', $candidat->id)->get();
+
+        // Appliquer les filtres si présents
+        // if ($request->has('statut') && $request->statut !== 'all') {
+        //     $query->where('statut', $request->statut);
+        // }
+
+        // if ($request->has('concours_id')) {
+        //     $query->where('concours_id', $request->concours_id);
+        // }
+
+        // if ($request->has('date_debut') && $request->has('date_fin')) {
+        //     $query->whereBetween('date_candidature', [
+        //         $request->date_debut,
+        //         $request->date_fin
+        //     ]);
+        // }
+
+        // // Tri
+        // $sortBy = $request->sort_by ?? 'date_candidature';
+        // $order = $request->order ?? 'desc';
+        // $query->orderBy($sortBy, $order);
+
+        // // Pagination ou récupération complète
+        // if ($request->has('paginate') && $request->paginate === 'true') {
+        //     $perPage = $request->per_page ?? 15;
+        //     $candidatures = $query->paginate($perPage);
+
+        //     // Ajouter des métadonnées sur le candidat
+        //     $candidatures->candidat_info = [
+        //         'id' => $candidat->id,
+        //         'user_id' => $user->id,
+        //         'nom_complet' => $user->nom . ' ' . $user->prenom,
+        //         'email' => $user->email,
+        //         'numero_cni' => $candidat->numero_cni,
+        //         'date_naissance' => $candidat->date_naissance,
+        //         'total_candidatures' => $candidat->candidatures()->count()
+        //     ];
+        // } else {
+        //     $candidatures = $query->get();
+
+        //     // Formater la réponse avec les infos du candidat
+        //     $response = [
+        //         'candidat' => [
+        //             'id' => $candidat->id,
+        //             'utilisateur' => [
+        //                 'id' => $user->id,
+        //                 'nom' => $user->nom,
+        //                 'prenom' => $user->prenom,
+        //                 'email' => $user->email,
+        //                 'telephone' => $user->telephone
+        //             ],
+        //             'informations' => [
+        //                 'numero_cni' => $candidat->numero_cni,
+        //                 'date_naissance' => $candidat->date_naissance,
+        //                 'lieu_naissance' => $candidat->lieu_naissance,
+        //                 'nationalite' => $candidat->nationalite,
+        //                 'adresse' => $candidat->adresse
+        //             ]
+        //         ],
+        //         'candidatures' => $candidatures,
+        //         'statistiques' => [
+        //             'total' => $candidatures->count(),
+        //             'par_statut' => $candidatures->groupBy('statut')->map->count(),
+        //             'par_concours' => $candidatures->groupBy('concours_id')->map->count()
+        //         ]
+        //     ];
+
+        //     return response()->json($response);
+        // }
+
+        return response()->json($query);
     }
 }
