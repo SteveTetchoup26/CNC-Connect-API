@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\EcoleController;
 use App\Http\Controllers\Api\EpreuveController;
 use App\Http\Controllers\Api\SessionController;
 use App\Http\Controllers\Api\SpecificationConcoursController;
+use App\Http\Controllers\Admin\UtilisateurController;
 use App\Models\Epreuve;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -70,6 +71,9 @@ Route::prefix('v1')->group(function () {
 
             Route::apiResource('epreuves', EpreuveController::class);
 
+            Route::apiResource('utilisateurs', UtilisateurController::class);
+            Route::get('roles', [UtilisateurController::class, 'getAllRoles']);
+
             Route::post('/concours', [ConcoursController::class, 'store']);
             Route::put('/concours/{id}', [ConcoursController::class, 'update']);
             Route::delete('/concours/{id}', [ConcoursController::class, 'destroy']);
@@ -85,6 +89,7 @@ Route::prefix('v1')->group(function () {
             Route::post('candidatures/{id}/rejeter', [CandidatureController::class, 'rejeter']);
             Route::put('candidatures/{id}', [CandidatureController::class, 'update']);
             Route::delete('candidatures/{id}', [CandidatureController::class, 'destroy']);
+            Route::get('utilisateurs/{userId}/candidatures', [CandidatureController::class, 'getCandidaturesByUser']);
 
             Route::post('candidatures/{id}/affecter-centres', [CandidatureController::class, 'affecterCentres']);
         });
