@@ -97,7 +97,9 @@ Route::prefix('v1')->group(function () {
 
             Route::get('/dashboard', [DashboardController::class, 'index']);
             Route::get('/dashboard/stats-by-period', [DashboardController::class, 'getStatsByPeriod']);
-            
+
+            Route::get('/concours/export/pdf', [ConcoursController::class, 'exportPdf']);
+            Route::get('/concours/export/excel', [ConcoursController::class, 'exportExcel']);
         });
     });
 });

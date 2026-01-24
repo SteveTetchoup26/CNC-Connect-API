@@ -2,13 +2,17 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Exports\ConcoursExport;
 use App\Http\Controllers\Controller;
 use App\Models\Concours;
 use App\Models\FraisConcours;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
+use Maatwebsite\Excel\Facades\Excel;
 
 class ConcoursController extends Controller
 {
@@ -296,5 +300,139 @@ class ConcoursController extends Controller
             ->get();
 
         return response()->json($concours);
+    }
+
+    public function exportPdf(Request $request)
+    {
+        try {
+            // Récupérer les concours avec les mêmes filtres que la méthode index
+            $query = Concours::with([
+                'sessions' => function ($query) {
+                    $query->orderBy('sessions.created_at', 'desc')->limit(1);
+                },
+                'fraisConcours'
+            ]);
+
+            // Appliquer les filtres
+            if ($request->filled('search')) {
+                $query->where('libelle_concours', 'like', '%' . $request->search . '%');
+            }
+
+            if ($request->filled('annee')) {
+                $query->whereHas('sessions', function ($q) use ($request) {
+                    $q->where('annee', $request->annee);
+                });
+            }
+
+            if ($request->filled('statut')) {
+                $query->whereHas('sessions', function ($q) use ($request) {
+                    $q->where('statut', $request->statut);
+                });
+            }
+
+            if ($request->filled('rubrique')) {
+                $rubrique = $request->rubrique;
+                $query->where('libelle_concours', 'LIKE', "%$rubrique%");
+            }
+
+            // Récupérer tous les concours filtrés
+            $concours = $query->latest()->get();
+
+            // Données pour le PDF
+            $data = [
+                'concours' => $concours,
+                'filtres' => [
+                    'search' => $request->search,
+                    'annee' => $request->annee,
+                    'statut' => $request->statut,
+                    'date_export' => Carbon::now()->format('d/m/Y H:i'),
+                    'total' => $concours->count(),
+                ],
+            ];
+
+            // Générer le PDF
+            $pdf = Pdf::loadView('exports.concours-pdf', $data)
+                ->setPaper('a4', 'landscape')
+                ->setOptions([
+                    'defaultFont' => 'Arial',
+                    'isHtml5ParserEnabled' => true,
+                    'isRemoteEnabled' => true,
+                ]);
+
+            // Retourner le PDF en téléchargement
+            return $pdf->download('concours-' . Carbon::now()->format('Y-m-d-H-i') . '.pdf');
+
+        } catch (\Exception $e) {
+            Log::error('Erreur export PDF concours : ' . $e->getMessage());
+            return response()->json([
+                'message' => 'Erreur lors de l\'export PDF',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function exportExcel(Request $request)
+    {
+        try {
+            // Récupérer les concours avec les mêmes filtres que la méthode index
+            $query = Concours::with([
+                'sessions' => function ($query) {
+                    $query->orderBy('sessions.created_at', 'desc')->limit(1);
+                },
+                'fraisConcours'
+            ]);
+
+            // Appliquer les filtres
+            if ($request->filled('search')) {
+                $query->where('libelle_concours', 'like', '%' . $request->search . '%');
+            }
+
+            if ($request->filled('annee')) {
+                $query->whereHas('sessions', function ($q) use ($request) {
+                    $q->where('annee', $request->annee);
+                });
+            }
+
+            if ($request->filled('statut')) {
+                $query->whereHas('sessions', function ($q) use ($request) {
+                    $q->where('statut', $request->statut);
+                });
+            }
+
+            if ($request->filled('rubrique')) {
+                $rubrique = $request->rubrique;
+                $query->where('libelle_concours', 'LIKE', "%$rubrique%");
+            }
+
+            // Récupérer tous les concours filtrés
+            $concours = $query->latest()->get();
+
+            // Transformer les données pour l'export Excel
+            $exportData = $concours->map(function ($concour) {
+                return [
+                    'Concours' => $concour->libelle_concours,
+                    'Session' => $concour->sessions->first()->libelle_session ?? 'N/A',
+                    'Date limite' => $concour->date_limite ? Carbon::parse($concour->date_limite)->format('d/m/Y') : 'N/A',
+                    'Date examen' => $concour->date_examen ? Carbon::parse($concour->date_examen)->format('d/m/Y') : 'N/A',
+                    'Frais (FCFA)' => $concour->fraisConcours ? number_format($concour->fraisConcours->montant_frais, 0, ',', ' ') : '0',
+                    'Banque' => $concour->fraisConcours->nom_banque ?? 'N/A',
+                    'Compte' => $concour->fraisConcours->numero_compte ?? 'N/A',
+                    'Nombre de filières' => $concour->concoursFilieres->count(),
+                ];
+            });
+
+            // Créer l'export Excel
+            $export = new ConcoursExport($exportData);
+
+            // Télécharger le fichier Excel
+            return Excel::download($export, 'concours-' . Carbon::now()->format('Y-m-d-H-i') . '.xlsx');
+
+        } catch (\Exception $e) {
+            Log::error('Erreur export Excel concours : ' . $e->getMessage());
+            return response()->json([
+                'message' => 'Erreur lors de l\'export Excel',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 }
