@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\CandidatureController;
 use App\Http\Controllers\Admin\CentreController;
+use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\RegionController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\api\CandidatController;
@@ -92,6 +93,11 @@ Route::prefix('v1')->group(function () {
             Route::get('utilisateurs/{userId}/candidatures', [CandidatureController::class, 'getCandidaturesByUser']);
 
             Route::post('candidatures/{id}/affecter-centres', [CandidatureController::class, 'affecterCentres']);
+
+
+            Route::get('/dashboard', [DashboardController::class, 'index']);
+            Route::get('/dashboard/stats-by-period', [DashboardController::class, 'getStatsByPeriod']);
+            
         });
     });
 });
