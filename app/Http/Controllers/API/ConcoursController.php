@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Exports\CandidatsConcoursExport;
 use App\Exports\ConcoursExport;
 use App\Http\Controllers\Controller;
+use App\Models\Candidature;
 use App\Models\Concours;
 use App\Models\FraisConcours;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -429,6 +431,137 @@ class ConcoursController extends Controller
 
         } catch (\Exception $e) {
             Log::error('Erreur export Excel concours : ' . $e->getMessage());
+            return response()->json([
+                'message' => 'Erreur lors de l\'export Excel',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function getConcoursAvecCandidats()
+    {
+        try {
+            $concours = Concours::has('candidatures')
+                ->withCount('candidatures')
+                ->with(['sessions' => function ($query) {
+                    $query->orderBy('sessions.created_at', 'desc')->limit(1);
+                }])
+                ->orderBy('date_examen', 'desc')
+                ->get()
+                ->map(function ($concour) {
+                    return [
+                        'id' => $concour->id,
+                        'libelle_concours' => $concour->libelle_concours,
+                        'date_limite' => $concour->date_limite,
+                        'date_examen' => $concour->date_examen,
+                        'candidatures_count' => $concour->candidatures_count,
+                        'session' => $concour->sessions->first()?->libelle_session,
+                    ];
+                });
+
+            return response()->json($concours);
+        } catch (\Exception $e) {
+            Log::error('Erreur récupération concours avec candidats : ' . $e->getMessage());
+            return response()->json([
+                'message' => 'Erreur lors de la récupération des concours'
+            ], 500);
+        }
+    }
+
+    /**
+     * Exporter la liste des candidats d'un concours en PDF
+     */
+    public function exportCandidatsPdf(Request $request, $concoursId)
+    {
+        try {
+            // Vérifier que le concours existe
+            $concours = Concours::with(['sessions', 'concoursFilieres.filiere.departement.ecole'])
+                ->findOrFail($concoursId);
+
+            // Récupérer les candidatures avec les informations des candidats
+            $candidatures = Candidature::with([
+                'candidat.utilisateur',
+                'candidat',
+                'centreExamen'
+            ])
+                ->where('concours_id', $concoursId)
+                ->orderBy('created_at', 'asc')
+                ->get();
+
+            // Préparer les données pour le PDF
+            $candidats = $candidatures->map(function ($candidature, $index) {
+                return [
+                    'numero' => $index + 1,
+                    'nom' => $candidature->candidat?->utilisateur?->nom ?? 'N/A',
+                    'prenom' => $candidature->candidat?->utilisateur?->prenom ?? 'N/A',
+                    'email' => $candidature->candidat?->utilisateur?->email ?? 'N/A',
+                    'sexe' => $candidature->candidat?->sexe === 'M' ? 'Masculin' : ($candidature->candidat?->sexe === 'F' ? 'Féminin' : 'N/A'),
+                    'numero_cni' => $candidature->candidat?->numero_cni ?? 'N/A',
+                    'statut' => $candidature->statut ?? 'N/A',
+                    'code_candidat' => $candidature->code_candidat_def ?? $candidature->code_candidat_prov ?? 'N/A',
+                    'centre_examen' => $candidature->centreExamen?->libelle_centre ?? 'Non affecté',
+                ];
+            });
+
+            $data = [
+                'concours' => $concours,
+                'candidats' => $candidats,
+                'total_candidats' => $candidats->count(),
+                'date_export' => Carbon::now()->format('d/m/Y à H:i'),
+                'ecole' => $concours->concoursFilieres->first()?->filiere?->departement?->ecole?->libelle_ecole ?? 'N/A',
+                'session' => $concours->sessions->first()?->libelle_session ?? 'N/A',
+            ];
+
+            // Générer le PDF
+            $pdf = Pdf::loadView('exports.candidats-concours-pdf', $data)
+                ->setPaper('a4', 'portrait')
+                ->setOptions([
+                    'defaultFont' => 'Arial',
+                    'isHtml5ParserEnabled' => true,
+                    'isRemoteEnabled' => true,
+                ]);
+
+            $filename = 'candidats-' . \Illuminate\Support\Str::slug($concours->libelle_concours) . '-' . Carbon::now()->format('Y-m-d') . '.pdf';
+
+            return $pdf->download($filename);
+
+        } catch (\Exception $e) {
+            Log::error('Erreur export PDF candidats : ' . $e->getMessage());
+            return response()->json([
+                'message' => 'Erreur lors de l\'export PDF',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Exporter la liste des candidats d'un concours en Excel
+     */
+    public function exportCandidatsExcel(Request $request, $concoursId)
+    {
+        try {
+            // Vérifier que le concours existe
+            $concours = Concours::with(['sessions'])->findOrFail($concoursId);
+
+            // Récupérer les candidatures avec les informations des candidats
+            $candidatures = Candidature::with([
+                'candidat.utilisateur',
+                'candidat',
+                'centreExamen'
+            ])
+                ->where('concours_id', $concoursId)
+                ->orderBy('created_at', 'asc')
+                ->get();
+
+            // Créer l'export
+            $export = new CandidatsConcoursExport($candidatures, $concours);
+
+            $filename = 'candidats-' . \Illuminate\Support\Str::slug($concours->libelle_concours) . '-' . Carbon::now()->format('Y-m-d') . '.xlsx';
+
+            return Excel::download($export, $filename);
+
+        } catch (\Exception $e) {
+            Log::error('Erreur export Excel candidats : ' . $e->getMessage());
             return response()->json([
                 'message' => 'Erreur lors de l\'export Excel',
                 'error' => $e->getMessage()

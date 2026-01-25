@@ -79,6 +79,8 @@ Route::prefix('v1')->group(function () {
             Route::put('/concours/{id}', [ConcoursController::class, 'update']);
             Route::delete('/concours/{id}', [ConcoursController::class, 'destroy']);
             Route::post('/concours/open', [ConcoursController::class, 'getOpenConcours']);
+            Route::get('/concours/avec-candidats', [ConcoursController::class, 'getConcoursAvecCandidats']);
+
 
             Route::apiResource('/spec-concours', SpecificationConcoursController::class);
 
@@ -100,6 +102,9 @@ Route::prefix('v1')->group(function () {
 
             Route::get('/concours/export/pdf', [ConcoursController::class, 'exportPdf']);
             Route::get('/concours/export/excel', [ConcoursController::class, 'exportExcel']);
+
+            Route::get('/concours/{id}/export-candidats-pdf', [ConcoursController::class, 'exportCandidatsPdf']);
+            Route::get('/concours/{id}/export-candidats-excel', [ConcoursController::class, 'exportCandidatsExcel']);
         });
     });
 });
