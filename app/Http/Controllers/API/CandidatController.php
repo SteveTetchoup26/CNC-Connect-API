@@ -274,7 +274,7 @@ class CandidatController extends Controller
                 'candidat' => $candidat,
                 'candidature' => $candidature->load(['concours', 'centreDepot', 'centreExamen']),
                 'code_temporaire' => $codeTemporaire,
-                'statut' => 'EN_ATTENTE',
+                'statut' => 'APPROUVEE',
                 'download_url' => $downloadUrl
             ];
 

@@ -68,7 +68,6 @@ class Candidature extends Model
         return $this->hasOne(CandidatureRappel::class);
     }
 
-    // ✅ SCOPE UTILES
 
     /**
      * Scope pour filtrer par statut
