@@ -11,6 +11,7 @@ use App\Models\FraisConcours;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
@@ -22,71 +23,73 @@ class ConcoursController extends Controller
      * Afficher la liste des concours
      */
     public function index(Request $request)
-{
-    try {
-        $perPage = $request->get('per_page', 6);
+    {
+        try {
+            $perPage = $request->get('per_page', 6);
 
-        $query = Concours::with([
-            'sessions' => function ($query) {
-                $query->orderBy('sessions.created_at', 'desc')->limit(1);
-            },
-            'concoursFilieres.filiere.departement.ecole',
-            'fraisConcours'
-        ]);
+            $query = Concours::with([
+                'sessions' => function ($query) {
+                    $query->orderBy('sessions.created_at', 'desc')->limit(1);
+                },
+                'concoursFilieres.filiere.departement.ecole',
+                'fraisConcours'
+            ]);
 
-        // 🔍 Recherche
-        if ($request->filled('search')) {
-            $query->where('libelle_concours', 'like', '%' . $request->search . '%');
+            // 🔍 Recherche
+            if ($request->filled('search')) {
+                $query->where('libelle_concours', 'like', '%' . $request->search . '%');
+            }
+
+            // 📅 Année
+            if ($request->filled('annee')) {
+                $query->whereHas('sessions', function ($q) use ($request) {
+                    $q->where('annee', $request->annee);
+                });
+            }
+
+            // 🔓 Statut
+            if ($request->filled('statut')) {
+                $query->whereHas('sessions', function ($q) use ($request) {
+                    $q->where('statut', $request->statut);
+                });
+            }
+
+            if ($request->filled('rubrique')) {
+                $rubrique = $request->rubrique;
+                $query->where('libelle_concours', 'LIKE', "%$rubrique%");
+            }
+
+            if ($request->boolean('raw')) {
+                return response()->json($query->latest()->get());
+            }
+
+            // 🎠 MODE SLIDER (pas de pagination)
+            if ($request->boolean('slider')) {
+                return response()->json(
+                    $query->latest()->take(10)->get()
+                );
+            }
+
+            // 📄 MODE PAGINÉ (page catalogue)
+            $concours = $query->latest()->paginate($perPage);
+
+            return response()->json([
+                'data' => $concours->items(),
+                'meta' => [
+                    'current_page' => $concours->currentPage(),
+                    'per_page' => $concours->perPage(),
+                    'total' => $concours->total(),
+                    'last_page' => $concours->lastPage(),
+                ]
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Erreur récupération concours : ' . $e->getMessage());
+
+            return response()->json([
+                'message' => 'Erreur lors de la récupération des concours'
+            ], 500);
         }
-
-        // 📅 Année
-        if ($request->filled('annee')) {
-            $query->whereHas('sessions', function ($q) use ($request) {
-                $q->where('annee', $request->annee);
-            });
-        }
-
-        // 🔓 Statut
-        if ($request->filled('statut')) {
-            $query->whereHas('sessions', function ($q) use ($request) {
-                $q->where('statut', $request->statut);
-            });
-        }
-
-        if ($request->filled('rubrique')) {
-            $rubrique = $request->rubrique;
-            $query->where('libelle_concours', 'LIKE', "%$rubrique%");
-        }
-
-        if ($request->boolean('raw')) { return response()->json($query->latest()->get()); }
-
-        // 🎠 MODE SLIDER (pas de pagination)
-        if ($request->boolean('slider')) {
-            return response()->json(
-                $query->latest()->take(10)->get()
-            );
-        }
-
-        // 📄 MODE PAGINÉ (page catalogue)
-        $concours = $query->latest()->paginate($perPage);
-
-        return response()->json([
-            'data' => $concours->items(),
-            'meta' => [
-                'current_page' => $concours->currentPage(),
-                'per_page' => $concours->perPage(),
-                'total' => $concours->total(),
-                'last_page' => $concours->lastPage(),
-            ]
-        ]);
-    } catch (\Exception $e) {
-        Log::error('Erreur récupération concours : ' . $e->getMessage());
-
-        return response()->json([
-            'message' => 'Erreur lors de la récupération des concours'
-        ], 500);
     }
-}
 
 
     /**
@@ -162,6 +165,9 @@ class ConcoursController extends Controller
     /**
      * Afficher un concours spécifique
      */
+    /**
+     * Afficher un concours spécifique
+     */
     public function show($id)
     {
         $concours = Concours::with([
@@ -184,7 +190,36 @@ class ConcoursController extends Controller
             return response()->json(['message' => 'Concours non trouvé'], 404);
         }
 
-        return response()->json($concours);
+        // Vérifier si l'utilisateur est authentifié et est un candidat
+        $isInscrit = false;
+        $candidatureId = null;
+
+        if (Auth::check()) {
+            $user = Auth::user();
+
+            // Vérifier si l'utilisateur a un profil candidat
+            $candidat = $user->candidat;
+
+            if ($candidat) {
+                // Vérifier s'il existe une candidature pour ce concours
+                $candidature = Candidature::where('candidat_id', $candidat->id)
+                    ->where('concours_id', $id)
+                    ->first();
+
+                if ($candidature) {
+                    $isInscrit = true;
+                    $candidatureId = $candidature->id;
+                }
+            }
+        }
+
+
+        // Retourner les données du concours avec les infos d'inscription
+        return response()->json([
+            'concours' => $concours,
+            'is_inscrit' => $isInscrit,
+            'candidature_id' => $candidatureId,
+        ]);
     }
 
     /**
@@ -363,7 +398,6 @@ class ConcoursController extends Controller
 
             // Retourner le PDF en téléchargement
             return $pdf->download('concours-' . Carbon::now()->format('Y-m-d-H-i') . '.pdf');
-
         } catch (\Exception $e) {
             Log::error('Erreur export PDF concours : ' . $e->getMessage());
             return response()->json([
@@ -428,7 +462,6 @@ class ConcoursController extends Controller
 
             // Télécharger le fichier Excel
             return Excel::download($export, 'concours-' . Carbon::now()->format('Y-m-d-H-i') . '.xlsx');
-
         } catch (\Exception $e) {
             Log::error('Erreur export Excel concours : ' . $e->getMessage());
             return response()->json([
@@ -524,7 +557,6 @@ class ConcoursController extends Controller
             $filename = 'candidats-' . \Illuminate\Support\Str::slug($concours->libelle_concours) . '-' . Carbon::now()->format('Y-m-d') . '.pdf';
 
             return $pdf->download($filename);
-
         } catch (\Exception $e) {
             Log::error('Erreur export PDF candidats : ' . $e->getMessage());
             return response()->json([
@@ -559,7 +591,6 @@ class ConcoursController extends Controller
             $filename = 'candidats-' . \Illuminate\Support\Str::slug($concours->libelle_concours) . '-' . Carbon::now()->format('Y-m-d') . '.xlsx';
 
             return Excel::download($export, $filename);
-
         } catch (\Exception $e) {
             Log::error('Erreur export Excel candidats : ' . $e->getMessage());
             return response()->json([

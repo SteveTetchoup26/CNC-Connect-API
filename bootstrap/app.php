@@ -19,6 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'role' => \App\Http\Middleware\RoleMiddleware::class,
+            'optional.sanctum' => \App\Http\Middleware\OptionalSanctum::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

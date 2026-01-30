@@ -25,7 +25,7 @@ Route::prefix('v1')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/login', [AuthController::class, 'login']);
     Route::get('/concours', [ConcoursController::class, 'index']);
-    Route::get('/concours/{id}', [ConcoursController::class, 'show']);
+    Route::get('/concours/{id}', [ConcoursController::class, 'show']) ->middleware('optional.sanctum');;
 
 
     Route::middleware('auth:sanctum')->group(function () {
