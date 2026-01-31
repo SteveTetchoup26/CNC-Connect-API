@@ -3,12 +3,12 @@
 use App\Http\Controllers\Admin\CandidatureController;
 use App\Http\Controllers\Admin\CentreController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\EpreuveController as AdminEpreuveController;
 use App\Http\Controllers\Admin\RegionController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\api\CandidatController;
 use App\Http\Controllers\Api\ConcoursController;
 use App\Http\Controllers\Api\EcoleController;
-use App\Http\Controllers\Api\EpreuveController;
 use App\Http\Controllers\Api\SessionController;
 use App\Http\Controllers\Api\SpecificationConcoursController;
 use App\Http\Controllers\Admin\UtilisateurController;
@@ -70,7 +70,7 @@ Route::prefix('v1')->group(function () {
             Route::apiResource('sessions', SessionController::class);
             Route::apiResource('ecoles', EcoleController::class);
 
-            Route::apiResource('epreuves', EpreuveController::class);
+            Route::apiResource('epreuves', AdminEpreuveController::class);
 
             Route::apiResource('utilisateurs', UtilisateurController::class);
             Route::get('roles', [UtilisateurController::class, 'getAllRoles']);

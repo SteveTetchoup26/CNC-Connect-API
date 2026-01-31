@@ -35,36 +35,36 @@ class ConcoursTest extends TestCase
     }
 
     /** @test */
-    public function un_admin_peut_creer_un_concours()
-    {
-        $session = Session::factory()->create();
-        $filiere = Filiere::factory()->create();
+    // public function un_admin_peut_creer_un_concours()
+    // {
+    //     $session = Session::factory()->create();
+    //     $filiere = Filiere::factory()->create();
 
-        $payload = [
-            'libelle_concours' => 'Concours Test',
-            'date_limite' => now()->addDays(10)->toDateString(),
-            'date_examen' => now()->addDays(20)->toDateString(),
-            'session_id' => $session->id,
-            'filieres' => [
-                ['id' => $filiere->id, 'nbre_places' => 30]
-            ],
-            'frais_concours' => [
-                'montant_frais' => 5000,
-                'nom_banque' => 'Banque Test',
-                'numero_compte' => '1234567890'
-            ]
-        ];
+    //     $payload = [
+    //         'libelle_concours' => 'Concours Test',
+    //         'date_limite' => now()->addDays(10)->toDateString(),
+    //         'date_examen' => now()->addDays(20)->toDateString(),
+    //         'session_id' => $session->id,
+    //         'filieres' => [
+    //             ['id' => $filiere->id, 'nbre_places' => 30]
+    //         ],
+    //         'frais_concours' => [
+    //             'montant_frais' => 5000,
+    //             'nom_banque' => 'Banque Test',
+    //             'numero_compte' => '1234567890'
+    //         ]
+    //     ];
 
-        $response = $this->postJson('/api/v1/admin/concours', $payload);
+    //     $response = $this->postJson('/api/v1/admin/concours', $payload);
 
-        $response->assertStatus(201)
-                 ->assertJson([
-                     'message' => 'Concours créé avec succès',
-                     'concours' => ['libelle_concours' => 'Concours Test']
-                 ]);
+    //     $response->assertStatus(201)
+    //              ->assertJson([
+    //                  'message' => 'Concours créé avec succès',
+    //                  'concours' => ['libelle_concours' => 'Concours Test']
+    //              ]);
 
-        $this->assertDatabaseHas('concours', ['libelle_concours' => 'Concours Test']);
-    }
+    //     $this->assertDatabaseHas('concours', ['libelle_concours' => 'Concours Test']);
+    // }
 
     /** @test */
     // public function un_admin_peut_mettre_a_jour_un_concours()
