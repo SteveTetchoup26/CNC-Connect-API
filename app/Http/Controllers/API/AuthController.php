@@ -15,34 +15,14 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
+use OpenApi\Annotations as OA;
 
-/**
- * @OA\Info(
- *     title="API Gestion Concours",
- *     version="1.0.0",
- *     description="Documentation de l'API pour la gestion des concours",
- *     @OA\Contact(
- *         email="support@concours.com"
- *     )
- * )
- *
- * @OA\Server(
- *     url="http://localhost:8000/api/v1",
- *     description="Serveur de développement"
- * )
- *
- * @OA\SecurityScheme(
- *     securityScheme="bearerAuth",
- *     type="http",
- *     scheme="bearer",
- *     bearerFormat="JWT"
- * )
- */
+
 class AuthController extends Controller
 {
     /**
      * @OA\Post(
-     *     path="/register",
+     *     path="/api/v1/register",
      *     summary="Inscription d'un nouvel utilisateur",
      *     tags={"Authentification"},
      *     @OA\RequestBody(
@@ -188,7 +168,7 @@ class AuthController extends Controller
 
     /**
      * @OA\Post(
-     *     path="/login",
+     *     path="/api/v1/login",
      *     summary="Connexion d'un utilisateur",
      *     tags={"Authentification"},
      *     @OA\RequestBody(
@@ -301,7 +281,7 @@ class AuthController extends Controller
 
     /**
      * @OA\Post(
-     *     path="/logout",
+     *     path="/api/v1/logout",
      *     summary="Déconnexion de l'utilisateur",
      *     tags={"Authentification"},
      *     security={{"bearerAuth":{}}},
@@ -347,7 +327,7 @@ class AuthController extends Controller
 
     /**
      * @OA\Get(
-     *     path="/user",
+     *     path="/api/v1/user",
      *     summary="Récupérer l'utilisateur authentifié",
      *     tags={"Authentification"},
      *     security={{"bearerAuth":{}}},
@@ -417,7 +397,7 @@ class AuthController extends Controller
 
     /**
      * @OA\Post(
-     *     path="/refresh-token",
+     *     path="/api/v1/refresh-token",
      *     summary="Rafraîchir le token d'authentification",
      *     tags={"Authentification"},
      *     security={{"bearerAuth":{}}},
