@@ -21,11 +21,6 @@ class UtilisateurSeeder extends Seeder
         DB::beginTransaction();
 
         try {
-            /**
-             * ============================
-             * 1️⃣ ADMINISTRATEUR
-             * ============================
-             */
             $adminUser = Utilisateur::create([
                 'email' => 'admin@test.com',
                 'password' => Hash::make('123456'),
@@ -48,46 +43,42 @@ class UtilisateurSeeder extends Seeder
                 'departement' => 'SYSTÈME D’INFORMATION',
             ]);
 
-            /**
-             * ============================
-             * 2️⃣ CANDIDAT (LOGIQUE IDENTIQUE AU CONTROLLER)
-             * ============================
-             */
-            $utilisateur = Utilisateur::create([
-                'email' => 'candidat@test.com',
-                'password' => Hash::make('123456'),
-                'nom' => 'DOE',
-                'prenom' => 'JOHN',
-                'telephone' => '690000002',
-            ]);
 
-            // Récupérer le rôle "CANDIDAT"
-            $roleCandidat = Role::where('libelle', 'CANDIDAT')->first();
+            // $utilisateur = Utilisateur::create([
+            //     'email' => 'candidat@test.com',
+            //     'password' => Hash::make('123456'),
+            //     'nom' => 'DOE',
+            //     'prenom' => 'JOHN',
+            //     'telephone' => '690000002',
+            // ]);
 
-            if (!$roleCandidat) {
-                throw new \Exception('Rôle CANDIDAT introuvable');
-            }
+            // // Récupérer le rôle "CANDIDAT"
+            // $roleCandidat = Role::where('libelle', 'CANDIDAT')->first();
 
-            // Assigner le rôle candidat
-            $utilisateur->roles()->attach($roleCandidat->id);
+            // if (!$roleCandidat) {
+            //     throw new \Exception('Rôle CANDIDAT introuvable');
+            // }
 
-            // Créer le candidat
-            Candidat::create([
-                'utilisateur_id' => $utilisateur->id,
-                'adresse' => null,
-                'nationalite' => null,
-                'sexe' => null,
-                'date_naissance' => null,
-                'lieu_naissance' => null,
-                'region_origine' => null,
-                'ville_origine' => null,
-                'departement_origine' => null,
-                'nom_mere' => null,
-                'telephone_mere' => null,
-                'nom_pere' => null,
-                'telephone_pere' => null,
-                'niveau_scolaire' => null,
-            ]);
+            // // Assigner le rôle candidat
+            // $utilisateur->roles()->attach($roleCandidat->id);
+
+            // // Créer le candidat
+            // Candidat::create([
+            //     'utilisateur_id' => $utilisateur->id,
+            //     'adresse' => null,
+            //     'nationalite' => null,
+            //     'sexe' => null,
+            //     'date_naissance' => null,
+            //     'lieu_naissance' => null,
+            //     'region_origine' => null,
+            //     'ville_origine' => null,
+            //     'departement_origine' => null,
+            //     'nom_mere' => null,
+            //     'telephone_mere' => null,
+            //     'nom_pere' => null,
+            //     'telephone_pere' => null,
+            //     'niveau_scolaire' => null,
+            // ]);
 
             DB::commit();
         } catch (\Throwable $e) {
