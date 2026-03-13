@@ -21,13 +21,15 @@ jobs:
           php-version: '8.4'
           extensions: mbstring, bcmath, pdo, mysql
           tools: composer:v2
-          coverage: none
 
       - name: Verify PHP version
         run: php -v
 
+      - name: Disable platform check
+        run: composer config platform-check false
+
       - name: Install dependencies
-        run: php $(which composer) install --prefer-dist --no-progress --no-interaction --ignore-platform-reqs
+        run: composer install --no-interaction --prefer-dist --no-progress --ignore-platform-reqs
 
       - name: Copy .env
         run: cp .env.example .env
