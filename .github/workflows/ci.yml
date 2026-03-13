@@ -21,7 +21,7 @@ jobs:
         ports:
           - 5432:5432
         options: >-
-          --health-cmd="pg_isready"
+          --health-cmd="pg_isready -U postgres"
           --health-interval=10s
           --health-timeout=5s
           --health-retries=5
@@ -36,9 +36,6 @@ jobs:
           php-version: '8.4'
           extensions: mbstring, bcmath, pdo, pgsql
           tools: composer:v2
-
-      - name: Verify PHP version
-        run: php -v
 
       - name: Install dependencies
         run: composer install --prefer-dist --no-progress --no-interaction --ignore-platform-reqs
@@ -55,7 +52,14 @@ jobs:
           sed -i 's/DB_USERNAME=.*/DB_USERNAME=postgres/' .env
           sed -i 's/DB_PASSWORD=.*/DB_PASSWORD=password/' .env
 
-      - name: Generate application key
+      - name: Wait for PostgreSQL
+        run: |
+          until pg_isready -h 127.0.0.1 -p 5432 -U postgres; do
+            echo "Waiting for postgres..."
+            sleep 2
+          done
+
+      - name: Generate key
         run: php artisan key:generate
 
       - name: Run migrations
