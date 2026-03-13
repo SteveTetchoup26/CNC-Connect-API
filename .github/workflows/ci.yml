@@ -18,12 +18,15 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: 8.4
+          php-version: '8.4'
           extensions: mbstring, bcmath, pdo, mysql
           coverage: none
 
+      - name: Check PHP version
+        run: php -v
+
       - name: Install dependencies
-        run: composer install --prefer-dist --no-progress
+        run: composer install --prefer-dist --no-progress --no-interaction
 
       - name: Copy .env
         run: cp .env.example .env
@@ -41,7 +44,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: laravel-build
-          path: |
-            ./
-            !vendor
-            !node_modules
+          path: .
