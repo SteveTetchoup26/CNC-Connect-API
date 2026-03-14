@@ -1,4 +1,4 @@
-name: Laravel CI
+name: Laravel CI/CD
 
 on:
   push:
@@ -7,7 +7,9 @@ on:
     branches: [ main, develop ]
 
 jobs:
-  laravel-tests:
+
+  ci:
+
     runs-on: ubuntu-latest
 
     steps:
@@ -65,3 +67,28 @@ jobs:
         with:
           name: laravel-build
           path: .
+
+  cd:
+
+    needs: ci
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build Docker image
+        run: |
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/cnc-connect-api:latest .
+
+      - name: Push Docker image
+        run: |
+          docker push ${{ secrets.DOCKER_USERNAME }}/cnc-connect-api:latest
