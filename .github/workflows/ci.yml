@@ -87,7 +87,7 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/cnc-connect-api:latest -f docker/php .
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/cnc-connect-api:latest -f docker/php/Dockerfile .
 
       - name: Push Docker image
         run: |
