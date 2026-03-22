@@ -12,8 +12,12 @@ RUN apt-get update && apt-get install -y \
     zip \
     unzip
 
-# Extensions PHP (zip ajouté)
+# Extensions PHP
 RUN docker-php-ext-install pdo pdo_pgsql pgsql mbstring exif pcntl bcmath gd zip
+
+# Extension Redis  ← NOUVEAU
+RUN pecl install redis \
+    && docker-php-ext-enable redis
 
 # Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
