@@ -139,9 +139,12 @@ jobs:
   # JOB 4 — CD (déploiement)
   # ════════════════════════════════════════════
   cd:
-    needs: ci
+    needs: [lint, ci]          # ← dépend des deux
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
+    if: |
+      always() &&
+      needs.ci.result == 'success' &&
+      github.ref == 'refs/heads/main'
 
     steps:
       - name: Checkout repository
