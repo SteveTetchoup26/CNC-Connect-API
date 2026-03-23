@@ -1,0 +1,5 @@
+db_database  = "cnc_connect"
+db_username  = "laravel"
+db_password  = "S697932976e"
+app_key      = "base64:G9uJGUjfBBAVdXYDJmu+rXWCj2FAUjVF/tvE2VUpIEg="
+docker_image = "stevetetchoup/cnc-connect-api:latest"

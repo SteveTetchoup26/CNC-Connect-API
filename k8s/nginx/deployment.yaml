@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+  namespace: cnc-connect
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      initContainers:
+        - name: copy-public
+          image: stevetetchoup/cnc-connect-api:latest
+          command: ["sh", "-c", "cp -r /var/www/public/. /public-dir/"]  # ← /public/. au lieu de /public
+          volumeMounts:
+            - name: public-dir
+              mountPath: /public-dir
+      containers:
+        - name: nginx
+          image: nginx:alpine
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: nginx-config
+              mountPath: /etc/nginx/conf.d
+            - name: public-dir
+              mountPath: /var/www/public   # ← fichiers PHP accessibles
+      volumes:
+        - name: nginx-config
+          configMap:
+            name: nginx-config
+        - name: public-dir
+          emptyDir: {}
