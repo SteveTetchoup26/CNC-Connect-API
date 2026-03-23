@@ -5,17 +5,17 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Console\Scheduling\Schedule;
 
-use Dotenv\Dotenv;
+// use Dotenv\Dotenv;
 
-$appEnv = $_SERVER['APP_ENV'] ?? 'local';
+// $appEnv = $_SERVER['APP_ENV'] ?? 'local';
 
-$basePath = dirname(__DIR__); // ✅ équivalent de base_path()
+// $basePath = dirname(__DIR__);
 
-if ($appEnv === 'docker' && file_exists($basePath . '/.env.docker')) {
-    Dotenv::createImmutable($basePath, '.env.docker')->load();
-} elseif ($appEnv === 'local' && file_exists($basePath . '/.env.local')) {
-    Dotenv::createImmutable($basePath, '.env.local')->load();
-}
+// if ($appEnv === 'docker' && file_exists($basePath . '/.env.docker')) {
+//     Dotenv::createImmutable($basePath, '.env.docker')->load();
+// } elseif ($appEnv === 'local' && file_exists($basePath . '/.env.local')) {
+//     Dotenv::createImmutable($basePath, '.env.local')->load();
+// }
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
