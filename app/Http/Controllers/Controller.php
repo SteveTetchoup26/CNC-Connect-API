@@ -7,7 +7,7 @@ use OpenApi\Annotations as OA;
 /**
  * @OA\Info(
  *      version="1.0.0",
- *      title="Documentation API Laravel",
+ *      title="Documentation API for CNC-Connect",
  *      description="Documentation de l'API avec Swagger",
  *      @OA\Contact(
  *          email="contact@example.com"
