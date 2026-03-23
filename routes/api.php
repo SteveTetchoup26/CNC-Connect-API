@@ -15,6 +15,11 @@ use App\Http\Controllers\Admin\UtilisateurController;
 use App\Models\Epreuve;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Prometheus\CollectorRegistry;
+use Prometheus\RenderTextFormat;
+use Prometheus\Storage\InMemory;
+
+
 
 // Route::get('/user', function (Request $request) {
 //     return $request->user();
@@ -25,7 +30,7 @@ Route::prefix('v1')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/login', [AuthController::class, 'login']);
     Route::get('/concours', [ConcoursController::class, 'index']);
-    Route::get('/concours/{id}', [ConcoursController::class, 'show']) ->middleware('optional.sanctum');;
+    Route::get('/concours/{id}', [ConcoursController::class, 'show'])->middleware('optional.sanctum');;
 
 
     Route::middleware('auth:sanctum')->group(function () {
@@ -112,3 +117,8 @@ Route::prefix('v1')->group(function () {
 
 Route::get('/candidature/{id}/fiche/download', [CandidatController::class, 'downloadFicheCandidature'])
     ->name('candidature.download.fiche');
+
+
+
+
+// Endpoint pour les métriques Prometheus

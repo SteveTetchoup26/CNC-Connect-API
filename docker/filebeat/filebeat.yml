@@ -1,0 +1,22 @@
+filebeat.inputs:
+  - type: log
+    enabled: true
+    paths:
+      - /var/log/laravel/*.log        # logs Laravel
+    fields:
+      app: laravel
+    fields_under_root: true
+    multiline:                        # gère les stack traces multi-lignes
+      pattern: '^\[\d{4}-\d{2}-\d{2}'
+      negate: true
+      match: after
+
+output.logstash:
+  hosts: ["logstash:5044"]
+
+logging.level: info
+logging.to_files: true
+logging.files:
+  path: /var/log/filebeat
+  name: filebeat
+  keepfiles: 7
