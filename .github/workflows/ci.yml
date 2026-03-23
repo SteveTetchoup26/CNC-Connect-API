@@ -112,7 +112,7 @@ jobs:
           path: .
 
   # ════════════════════════════════════════════
-  # JOB 3 — SONARQUBE (scan local)
+  # JOB 3 — SONARQUBE
   # ════════════════════════════════════════════
   sonarqube:
     runs-on: ubuntu-latest
@@ -139,12 +139,9 @@ jobs:
   # JOB 4 — CD (déploiement)
   # ════════════════════════════════════════════
   cd:
-    needs: [lint, ci]          # ← dépend des deux
+    needs: ci
     runs-on: ubuntu-latest
-    if: |
-      always() &&
-      needs.ci.result == 'success' &&
-      github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main'
 
     steps:
       - name: Checkout repository
@@ -157,9 +154,7 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Build Docker image
-        run: |
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/cnc-connect-api:latest -f docker/php/Dockerfile .
+        run: docker build -t ${{ secrets.DOCKER_USERNAME }}/cnc-connect-api:latest -f docker/php/Dockerfile .
 
       - name: Push Docker image
-        run: |
-          docker push ${{ secrets.DOCKER_USERNAME }}/cnc-connect-api:latest
+        run: docker push ${{ secrets.DOCKER_USERNAME }}/cnc-connect-api:latest
