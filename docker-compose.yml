@@ -16,6 +16,8 @@ services:
     depends_on:
       - db
       - redis
+    # environment:
+    # - APP_ENV=docker
 
   nginx:
     image: nginx:alpine
