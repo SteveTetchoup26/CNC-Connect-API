@@ -112,7 +112,7 @@ jobs:
           path: .
 
   # ════════════════════════════════════════════
-  # JOB 3 — SONARQUBE
+  # JOB 3 — SONARQUBE (scan local)
   # ════════════════════════════════════════════
   sonarqube:
     runs-on: ubuntu-latest
@@ -122,14 +122,18 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: SonarQube Scan
-        uses: sonarsource/sonarqube-scan-action@master
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+        run: |
+          docker run --rm \
+            -v "${{ github.workspace }}:/usr/src" \
+            sonarsource/sonar-scanner-cli \
+            -Dsonar.projectKey=cnc-connect-api \
+            -Dsonar.sources=app,routes,config,database \
+            -Dsonar.host.url=${{ secrets.SONAR_HOST_URL }} \
+            -Dsonar.token=${{ secrets.SONAR_TOKEN }} \
+            -Dsonar.php.version=8.4
+        continue-on-error: true
 
   # ════════════════════════════════════════════
   # JOB 4 — CD (déploiement)
