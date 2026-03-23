@@ -12,33 +12,32 @@ class PrometheusMiddleware
 {
     public function __construct(private CollectorRegistry $registry) {}
 
-    public function handle(Request $request, Closure $next): Response
-    {
-        $start    = microtime(true);
-        $response = $next($request);
+   public function handle(Request $request, Closure $next): Response
+{
+    $start    = microtime(true);
+    $response = $next($request);
 
-        if ($request->is('metrics')) {
-            return $response;
-        }
+    if ($request->is('metrics')) {
+        return $response;
+    }
 
+    // ← Entourer dans try/catch pour éviter l'échec en test/CI
+    try {
         $duration = microtime(true) - $start;
         $route    = $request->route()?->getName() ?? $request->getPathInfo();
         $method   = $request->method();
         $status   = (string) $response->getStatusCode();
 
-        // ── Compteur ──────────────────────────────────────────────────
         try {
             $counter = $this->registry->registerCounter(
                 'laravel', 'http_requests_total',
-                'Total HTTP requests',
-                ['method', 'route', 'status']
+                'Total HTTP requests', ['method', 'route', 'status']
             );
         } catch (\Prometheus\Exception\MetricsRegistrationException $e) {
             $counter = $this->registry->getCounter('laravel', 'http_requests_total');
         }
         $counter->inc([$method, $route, $status]);
 
-        // ── Histogramme ───────────────────────────────────────────────
         try {
             $histogram = $this->registry->registerHistogram(
                 'laravel', 'http_request_duration_seconds',
@@ -51,17 +50,20 @@ class PrometheusMiddleware
         }
         $histogram->observe($duration, [$method, $route]);
 
-        // ── Gauge mémoire ─────────────────────────────────────────────
         try {
             $gauge = $this->registry->registerGauge(
-                'laravel', 'memory_usage_bytes',
-                'Memory used by PHP process'
+                'laravel', 'memory_usage_bytes', 'Memory used by PHP process'
             );
         } catch (\Prometheus\Exception\MetricsRegistrationException $e) {
             $gauge = $this->registry->getGauge('laravel', 'memory_usage_bytes');
         }
         $gauge->set(memory_get_peak_usage(true));
 
-        return $response;
+    } catch (\Throwable $e) {
+        // Redis indisponible (CI, tests) — on ignore silencieusement
+        \Illuminate\Support\Facades\Log::warning('Prometheus metrics unavailable: ' . $e->getMessage());
     }
+
+    return $response;
+}
 }
