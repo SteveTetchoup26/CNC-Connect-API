@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: laravel-app
+  namespace: cnc-connect
+spec:
+  replicas: 2                    # 2 pods par défaut
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1           # 1 pod supplémentaire pendant la mise à jour
+      maxUnavailable: 0     # 0 pod indisponible pendant la mise à jour
+  selector:
+    matchLabels:
+      app: laravel-app
+  template:
+    metadata:
+      labels:
+        app: laravel-app
+    spec:
+      containers:
+        - name: laravel-app
+          image: stevetetchoup/cnc-connect-api:latest
+          ports:
+            - containerPort: 9000
+          envFrom:
+            - configMapRef:
+                name: cnc-connect-config
+            - secretRef:
+                name: cnc-connect-secret
+          volumeMounts:
+            - name: app-storage
+              mountPath: /var/www/storage
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "500m"
+          readinessProbe:         # pod prêt à recevoir du trafic ?
+            tcpSocket:
+              port: 9000
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          livenessProbe:          # pod toujours vivant ?
+            tcpSocket:
+              port: 9000
+            initialDelaySeconds: 15
+            periodSeconds: 10
+      volumes:
+        - name: app-storage
+          emptyDir: {}
